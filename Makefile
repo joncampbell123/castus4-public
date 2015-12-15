@@ -29,16 +29,26 @@ LD ?= ld
 all: parsetime
 
 clean:
-	rm -fv *.a *.la *.o $(TARGETS)
+	rm -fv *.a *.la *.o */*.o $(TARGETS)
 
-install:
+install: libcastus4public.a
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
 	mkdir -p $(DESTDIR)$(PREFIX)/$(LIBNAME)
+	cp -v *.a $(DESTDIR)$(PREFIX)/$(LIBNAME)/
 	mkdir -p $(DESTDIR)$(PREFIX)/include
+	mkdir -p $(DESTDIR)$(PREFIX)/include/castus4-public
+	cp -v castus4-public/*.h $(DESTDIR)$(PREFIX)/include/castus4-public/
 
-parsetime: parsetime.o
-	$(CXX) -o $@ $< $(LDFLAGS)
+libcastus4public.a: castus4-public/libcastus4public_parsetime.o
+	rm -fv $@
+	$(AR) r $@ $^
+
+castus4-public/libcastus4public_parsetime.o: castus4-public/libcastus4public_parsetime.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+parsetime: parsetime.o libcastus4public.a
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 parsetime.o: parsetime.cpp
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
