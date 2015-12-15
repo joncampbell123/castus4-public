@@ -1,4 +1,6 @@
 
+TARGETS=parsetime
+
 CFLAGS_COMMON=-I.
 
 host=$(shell uname -m)
@@ -27,7 +29,7 @@ LD ?= ld
 all: parsetime
 
 clean:
-	rm -fv *.a *.la *.o
+	rm -fv *.a *.la *.o $(TARGETS)
 
 install:
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
