@@ -18,7 +18,7 @@ struct tm castus4_schedule_parse_time(const char *v,unsigned long *sub_us,int *s
 	t.tm_mon = 0;
 
 	if (sched_type != NULL)
-		*sched_type = C4_SCHED_TYPE_WEEKLY;
+		*sched_type = C4_SCHED_TYPE_DAILY;
 
 	if (sub_us != NULL)
 		*sub_us = 0UL;
