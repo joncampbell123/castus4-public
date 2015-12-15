@@ -33,6 +33,7 @@ clean:
 
 install: libcastus4public.a
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp -v gentime $(DESTDIR)$(PREFIX)/bin/castus4public_demo_gentime
 	cp -v parsetime $(DESTDIR)$(PREFIX)/bin/castus4public_demo_parsetime
 	mkdir -p $(DESTDIR)$(PREFIX)/$(LIBNAME)
 	cp -v *.a $(DESTDIR)$(PREFIX)/$(LIBNAME)/
