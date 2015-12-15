@@ -9,13 +9,16 @@
 
 #include <castus4-public/libcastus4public_parsetime.h>
 
-struct tm castus4_schedule_parse_time(const char *v,unsigned long *sub_us) {
+struct tm castus4_schedule_parse_time(const char *v,unsigned long *sub_us,int *sched_type) {
 	int pm = 0,ampm = 0,next = 0,next_type = 0/*daily schedule*/;
 	struct tm t;
 
 	memset(&t,0,sizeof(t));
 	t.tm_mday = 1;
 	t.tm_mon = 0;
+
+	if (sched_type != NULL)
+		*sched_type = C4_SCHED_TYPE_WEEKLY;
 
 	if (sub_us != NULL)
 		*sub_us = 0UL;
@@ -156,6 +159,9 @@ struct tm castus4_schedule_parse_time(const char *v,unsigned long *sub_us) {
 			case 3: t.tm_mon += 12; /* yearly */ break;
 		}
 	}
+
+	if (sched_type)
+		*sched_type = next_type;
 
 	return t;
 }
