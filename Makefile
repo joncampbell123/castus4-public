@@ -1,5 +1,5 @@
 
-TARGETS=parsetime
+TARGETS=parsetime gentime
 
 CFLAGS_COMMON=-I.
 
