@@ -182,6 +182,7 @@ int main(int argc,char **argv) {
 	printf("        Hour: %u\n",rtm.tm_hour);		/* 0..23 */
 	printf("      Minute: %u\n",rtm.tm_min);		/* 0..59 */
 	printf("      Second: %u\n",rtm.tm_sec);		/* 0..59 */
+	printf(" Microsecond: %lu\n",rtm_us);			/* 0..999999 */
 	return 0;
 }
 
