@@ -26,7 +26,7 @@ CC ?= gcc
 AR ?= ar
 LD ?= ld
 
-all: parsetime
+all: parsetime gentime
 
 clean:
 	rm -fv *.a *.la *.o */*.o $(TARGETS)
@@ -40,9 +40,12 @@ install: libcastus4public.a
 	mkdir -p $(DESTDIR)$(PREFIX)/include/castus4-public
 	cp -v castus4-public/*.h $(DESTDIR)$(PREFIX)/include/castus4-public/
 
-libcastus4public.a: castus4-public/libcastus4public_parsetime.o
+libcastus4public.a: castus4-public/libcastus4public_parsetime.o castus4-public/libcastus4public_gentime.o
 	rm -fv $@
 	$(AR) r $@ $^
+
+castus4-public/libcastus4public_gentime.o: castus4-public/libcastus4public_gentime.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
 castus4-public/libcastus4public_parsetime.o: castus4-public/libcastus4public_parsetime.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
@@ -51,5 +54,11 @@ parsetime: parsetime.o libcastus4public.a
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 parsetime.o: parsetime.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+gentime: gentime.o libcastus4public.a
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+gentime.o: gentime.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
