@@ -12,6 +12,7 @@
 #include <castus4-public/libcastus4public_schedule.h>
 #include <castus4-public/libcastus4public_parsetime.h>
 #include <castus4-public/libcastus4public_gentime.h>
+#include <castus4-public/libcastus4public_chomp.h>
 
 using namespace std;
 
@@ -19,15 +20,6 @@ using namespace std;
 #include <vector>
 #include <list>
 #include <map>
-
-/* C/C++ equivalent of Perl's chomp function TODO move out */
-void castus4public_chomp(char *s) {
-	char *orig_s = s;
-	size_t l = strlen(s);
-	if (l == 0) return;
-	s += l - 1;
-	while (s > orig_s && (*s == '\n' || *s == '\r')) *s-- = 0;
-}
 
 class Castus4publicSchedule {
 public:
