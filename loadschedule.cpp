@@ -26,9 +26,44 @@ public:
 	enum entry_parse_mode {
 		Global=0,
 		Item,
-		ScheduleBlock,
+		ScheduleBlockItem,
 		Defaults,
 		Unknown
+	};
+public:
+	static void common_std_map_name_value_pair_entry(std::map<std::string,std::string> &entry,std::string &name,std::string &value) {
+		std::map<std::string,std::string>::iterator entry_i = entry.find(name);
+		if (entry_i == entry.end())
+			entry[name] = value;
+		else {
+			entry_i->second += "\n";
+			entry_i->second += value;
+		}
+	}
+public:
+	class ScheduleItem {
+	public:
+		ScheduleItem() {
+		}
+		~ScheduleItem() {
+		}
+		void takeNameValuePair(std::string &name,std::string &value) {
+			common_std_map_name_value_pair_entry(/*&*/entry,name,value);
+		}
+	public:
+		std::map<std::string,std::string> 	entry;
+	};
+	class ScheduleBlock {
+	public:
+		ScheduleBlock() {
+		}
+		~ScheduleBlock() {
+		}
+		void takeNameValuePair(std::string &name,std::string &value) {
+			common_std_map_name_value_pair_entry(/*&*/entry,name,value);
+		}
+	public:
+		std::map<std::string,std::string> 	entry;
 	};
 public:
 	Castus4publicSchedule() {
@@ -101,7 +136,7 @@ public:
 
 					if (entry == "") {
 						entry_mode = Item;
-						schedule_items.push_back(std::map<std::string,std::string>());
+						schedule_items.push_back(ScheduleItem());
 					}
 					else if (!strncasecmp(entry.c_str(),"defaults,",9)) {
 						const char *s = entry.c_str()+9;
@@ -123,8 +158,8 @@ public:
 						}
 					}
 					else if (entry == "schedule block") {
-						entry_mode = ScheduleBlock;
-						schedule_blocks.push_back(std::map<std::string,std::string>());
+						entry_mode = ScheduleBlockItem;
+						schedule_blocks.push_back(ScheduleBlock());
 					}
 					else {
 						entry_mode = Unknown;
@@ -169,28 +204,14 @@ public:
 								defaults_i->second += value;
 							}
 							} break;
-						case ScheduleBlock: {
+						case ScheduleBlockItem:
 							assert(!schedule_blocks.empty());
-							std::map<std::string,std::string> &entry = schedule_blocks.back();
-							std::map<std::string,std::string>::iterator entry_i = entry.find(name);
-							if (entry_i == entry.end())
-								entry[name] = value;
-							else {
-								entry_i->second += "\n";
-								entry_i->second += value;
-							}
-							} break;
-						case Item: {
+							schedule_blocks.back().takeNameValuePair(name,value);
+							break;
+						case Item:
 							assert(!schedule_items.empty());
-							std::map<std::string,std::string> &entry = schedule_items.back();
-							std::map<std::string,std::string>::iterator entry_i = entry.find(name);
-							if (entry_i == entry.end())
-								entry[name] = value;
-							else {
-								entry_i->second += "\n";
-								entry_i->second += value;
-							}
-							} break;
+							schedule_items.back().takeNameValuePair(name,value);
+							break;
 					}
 				}
 			}
@@ -202,8 +223,8 @@ public:
 	bool						in_entry;
 	enum entry_parse_mode				entry_mode;
 // parsed output
-	std::list< std::map<std::string,std::string> >	schedule_items;
-	std::list< std::map<std::string,std::string> >	schedule_blocks;
+	std::list<ScheduleItem>				schedule_items;
+	std::list<ScheduleBlock>			schedule_blocks;
 	std::map<std::string,std::string>		defaults_values;
 	std::string					defaults_type;
 	std::map<std::string,std::string>		global_values;
@@ -260,11 +281,11 @@ int main(int argc,char **argv) {
 		printf("  %s = %s\n",i->first.c_str(),i->second.c_str());
 
 	printf("Schedule blocks:\n");
-	for (std::list< std::map<std::string,std::string> >::iterator i=schedule.schedule_blocks.begin();
+	for (std::list<Castus4publicSchedule::ScheduleBlock>::iterator i=schedule.schedule_blocks.begin();
 		i!=schedule.schedule_blocks.end();i++) {
 		printf("  {\n");
 
-		std::map<std::string,std::string> &block = *i;
+		std::map<std::string,std::string> &block = (*i).entry;
 		for (std::map<std::string,std::string>::iterator j=block.begin();j!=block.end();j++)
 			printf("    %s = %s\n",j->first.c_str(),j->second.c_str());
 
@@ -272,11 +293,11 @@ int main(int argc,char **argv) {
 	}
 
 	printf("Schedule items:\n");
-	for (std::list< std::map<std::string,std::string> >::iterator i=schedule.schedule_items.begin();
+	for (std::list<Castus4publicSchedule::ScheduleItem>::iterator i=schedule.schedule_items.begin();
 		i!=schedule.schedule_items.end();i++) {
 		printf("  {\n");
 
-		std::map<std::string,std::string> &block = *i;
+		std::map<std::string,std::string> &block = (*i).entry;
 		for (std::map<std::string,std::string>::iterator j=block.begin();j!=block.end();j++)
 			printf("    %s = %s\n",j->first.c_str(),j->second.c_str());
 
