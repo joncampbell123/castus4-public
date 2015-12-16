@@ -41,7 +41,7 @@ install: libcastus4public.a
 	mkdir -p $(DESTDIR)$(PREFIX)/include/castus4-public
 	cp -v castus4-public/*.h $(DESTDIR)$(PREFIX)/include/castus4-public/
 
-libcastus4public.a: castus4-public/libcastus4public_parsetime.o castus4-public/libcastus4public_gentime.o castus4-public/libcastus4public_chomp.o
+libcastus4public.a: castus4-public/libcastus4public_parsetime.o castus4-public/libcastus4public_gentime.o castus4-public/libcastus4public_chomp.o castus4-public/libcastus4public_schedule_object.o
 	rm -fv $@
 	$(AR) r $@ $^
 
@@ -52,6 +52,9 @@ castus4-public/libcastus4public_gentime.o: castus4-public/libcastus4public_genti
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
 castus4-public/libcastus4public_parsetime.o: castus4-public/libcastus4public_parsetime.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+castus4-public/libcastus4public_schedule_object.o: castus4-public/libcastus4public_schedule_object.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
 parsetime: parsetime.o libcastus4public.a
