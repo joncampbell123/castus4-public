@@ -1,8 +1,12 @@
 
+#include <stdio.h>
+
 #include <string>
 #include <vector>
 #include <list>
 #include <map>
+
+class Castus4publicSchedule;
 
 class Castus4publicSchedule {
 public:
@@ -13,6 +17,7 @@ public:
 		Defaults,
 		Unknown
 	};
+	typedef bool (*writeout_cb_t)(Castus4publicSchedule *_this,const char *line,void *opaque);
 public:
 	static void common_std_map_name_value_pair_entry(std::map<std::string,std::string> &entry,std::string &name,std::string &value);
 public:
@@ -39,6 +44,13 @@ public:
 	void						end_load();
 	void						begin_load();
 	void						load_take_line(const char *line);
+
+	bool						write_out(FILE *fp);
+	static bool					write_out_stdio_cb(Castus4publicSchedule *_this,const char *line,void *opaque);
+
+	bool						write_out(writeout_cb_t f,void *opaque);
+
+	bool						write_out_name_value_pair(const std::string &name,const std::string &value,writeout_cb_t f,void *opaque,bool tab,bool spcequ);
 public:
 	bool						head;
 	std::string					entry;			// if within { ... } block

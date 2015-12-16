@@ -194,3 +194,105 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 	}
 }
 
+bool Castus4publicSchedule::write_out(FILE *fp) {
+	if (fp == NULL) return false;
+	return write_out(&write_out_stdio_cb,(void*)fp);
+}
+
+bool Castus4publicSchedule::write_out_stdio_cb(Castus4publicSchedule *_this,const char *line,void *opaque) {
+	FILE *fp = (FILE*)opaque;
+	if (fp == NULL) return false;
+	if (feof(fp) || ferror(fp)) return false;
+	if (fputs(line,fp) == EOF) return false;
+	return true;
+}
+
+bool Castus4publicSchedule::write_out_name_value_pair(const std::string &name,const std::string &value,writeout_cb_t f,void *opaque,bool tab,bool spcequ) {
+	std::string line;
+	const char *s,*n;
+
+	s = value.c_str();
+	while (s != NULL) {
+		n = strchr(s,'\n');
+
+		line.clear();
+		if (tab) line += '\t';
+
+		if (n != NULL) {
+			line += name + (spcequ ? " = " : "=") + std::string(s,(size_t)(n-s)) + "\n";
+			n++;
+		}
+		else {
+			line += name + (spcequ ? " = " : "=") + s + "\n";
+		}
+
+		if (!f(this,line.c_str(),opaque)) return false;
+		s = n;
+	}
+
+	return true;
+}
+
+bool Castus4publicSchedule::write_out(writeout_cb_t f,void *opaque) {
+	std::string line;
+
+	if (schedule_type == C4_SCHED_TYPE_NONE) return false;
+
+	switch (schedule_type) {
+		case C4_SCHED_TYPE_DAILY:
+			if (!f(this,"*daily\n",opaque)) return false;
+			if (!f(this,"defaults, of the day{\n",opaque)) return false;
+			break;
+		case C4_SCHED_TYPE_WEEKLY:
+			if (!f(this,"*weekly\n",opaque)) return false;
+			if (!f(this,"defaults, day of the week{\n",opaque)) return false;
+			break;
+		case C4_SCHED_TYPE_MONTHLY:
+			if (!f(this,"*monthly\n",opaque)) return false;
+			if (!f(this,"defaults, day of the month{\n",opaque)) return false;
+			break;
+		case C4_SCHED_TYPE_YEARLY:
+			if (!f(this,"*yearly\n",opaque)) return false;
+			if (!f(this,"defaults, day of the year{\n",opaque)) return false;
+			break;
+		case C4_SCHED_TYPE_INTERVAL:
+			if (!f(this,"*interval\n",opaque)) return false;
+			if (!f(this,"defaults, day of the interval{\n",opaque)) return false;
+			break;
+	}
+
+	for (std::map<std::string,std::string>::iterator i=defaults_values.begin();i!=defaults_values.end();i++) {
+		if (!write_out_name_value_pair(i->first,i->second,f,opaque,/*tab=*/true,/*spcequ*/false)) return false;
+	}
+
+	if (!f(this,"}\n",opaque)) return false;
+
+	for (std::map<std::string,std::string>::iterator i=global_values.begin();i!=global_values.end();i++) {
+		if (!write_out_name_value_pair(i->first,i->second,f,opaque,/*tab=*/false,/*spcequ*/true)) return false;
+	}
+
+	for (std::list<ScheduleBlock>::iterator i=schedule_blocks.begin();i!=schedule_blocks.end();i++) {
+		if (!f(this,"schedule block {\n",opaque)) return false;
+
+		std::map<std::string,std::string> &block = (*i).entry;
+		for (std::map<std::string,std::string>::iterator j=block.begin();j!=block.end();j++) {
+			if (!write_out_name_value_pair(j->first,j->second,f,opaque,/*tab=*/true,/*spcequ*/false)) return false;
+		}
+
+		if (!f(this,"}\n",opaque)) return false;
+	}
+
+	for (std::list<ScheduleItem>::iterator i=schedule_items.begin();i!=schedule_items.end();i++) {
+		if (!f(this,"{\n",opaque)) return false;
+
+		std::map<std::string,std::string> &block = (*i).entry;
+		for (std::map<std::string,std::string>::iterator j=block.begin();j!=block.end();j++) {
+			if (!write_out_name_value_pair(j->first,j->second,f,opaque,/*tab=*/true,/*spcequ*/false)) return false;
+		}
+
+		if (!f(this,"}\n",opaque)) return false;
+	}
+
+	return true;
+}
+
