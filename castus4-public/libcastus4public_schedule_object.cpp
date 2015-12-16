@@ -207,6 +207,17 @@ bool Castus4publicSchedule::write_out_stdio_cb(Castus4publicSchedule *_this,cons
 	return true;
 }
 
+bool Castus4publicSchedule::write_out(std::ostream &cout) {
+	return write_out(&write_out_iostream_cb,(void*)(&cout));
+}
+
+bool Castus4publicSchedule::write_out_iostream_cb(Castus4publicSchedule *_this,const char *line,void *opaque) {
+	std::ostream *hax_cout = (std::ostream*)opaque;
+	// FIXME: How do we detect error on output?
+	*hax_cout << line;
+	return true;
+}
+
 bool Castus4publicSchedule::write_out_name_value_pair(const std::string &name,const std::string &value,writeout_cb_t f,void *opaque,bool tab,bool spcequ) {
 	std::string line;
 	const char *s,*n;

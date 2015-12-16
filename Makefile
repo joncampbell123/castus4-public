@@ -1,5 +1,5 @@
 
-TARGETS=parsetime gentime loadschedule lintschedule
+TARGETS=parsetime gentime loadschedule lintschedule lintschedule2
 
 CFLAGS_COMMON=-I.
 
@@ -26,7 +26,7 @@ CC ?= gcc
 AR ?= ar
 LD ?= ld
 
-all: parsetime gentime loadschedule lintschedule
+all: parsetime gentime loadschedule lintschedule lintschedule2
 
 clean:
 	rm -fv *.a *.la *.o */*.o $(TARGETS)
@@ -79,5 +79,11 @@ lintschedule: lintschedule.o libcastus4public.a
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 lintschedule.o: lintschedule.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+lintschedule2: lintschedule2.o libcastus4public.a
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+lintschedule2.o: lintschedule2.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 

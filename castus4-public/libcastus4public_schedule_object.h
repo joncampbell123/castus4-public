@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 
+#include <iostream>
 #include <string>
 #include <vector>
 #include <list>
@@ -47,6 +48,9 @@ public:
 
 	bool						write_out(FILE *fp);
 	static bool					write_out_stdio_cb(Castus4publicSchedule *_this,const char *line,void *opaque);
+
+	bool						write_out(std::ostream &cout);
+	static bool					write_out_iostream_cb(Castus4publicSchedule *_this,const char *line,void *opaque);
 
 	bool						write_out(writeout_cb_t f,void *opaque);
 
