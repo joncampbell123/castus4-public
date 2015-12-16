@@ -186,24 +186,12 @@ public:
 					 *      in the same way the Server Sent Events do, concat together with
 					 *      newlines. */
 					switch (entry_mode) {
-						case Global: {
-							std::map<std::string,std::string>::iterator global_i = global_values.find(name);
-							if (global_i == global_values.end())
-								global_values[name] = value;
-							else {
-								global_i->second += "\n";
-								global_i->second += value;
-							}
-							} break;
-						case Defaults: {
-							std::map<std::string,std::string>::iterator defaults_i = defaults_values.find(name);
-							if (defaults_i == defaults_values.end())
-								defaults_values[name] = value;
-							else {
-								defaults_i->second += "\n";
-								defaults_i->second += value;
-							}
-							} break;
+						case Global:
+							common_std_map_name_value_pair_entry(/*&*/global_values,name,value);
+							break;
+						case Defaults:
+							common_std_map_name_value_pair_entry(/*&*/defaults_values,name,value);
+							break;
 						case ScheduleBlockItem:
 							assert(!schedule_blocks.empty());
 							schedule_blocks.back().takeNameValuePair(name,value);
