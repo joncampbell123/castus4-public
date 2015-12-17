@@ -1,5 +1,5 @@
 
-TARGETS=parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3 showmeta
+TARGETS=parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3 showmeta autochop1
 
 CFLAGS_COMMON=-I.
 
@@ -12,7 +12,7 @@ endif
 
 os=$(shell uname -s)
 ifeq ($(os),Linux)
-CFLAGS_COMMON += -DLINUX
+CFLAGS_COMMON += -DLINUX -D_FILE_OFFSET_BITS=64
 endif
 
 CFLAGS=$(CFLAGS_COMMON)
@@ -26,7 +26,7 @@ CC ?= gcc
 AR ?= ar
 LD ?= ld
 
-all: parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3 showmeta
+all: parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3 showmeta autochop1
 
 clean:
 	rm -fv *.a *.la *.o */*.o $(TARGETS)
@@ -40,6 +40,8 @@ install: libcastus4public.a
 	mkdir -p $(DESTDIR)$(PREFIX)/include
 	mkdir -p $(DESTDIR)$(PREFIX)/include/castus4-public
 	cp -v castus4-public/*.h $(DESTDIR)$(PREFIX)/include/castus4-public/
+	mkdir -p $(DESTDIR)/mnt/main/tv/schedule-filters/
+	cp -v autochop1 $(DESTDIR)/mnt/main/tv/schedule-filters/
 
 libcastus4public.a: castus4-public/libcastus4public_parsetime.o castus4-public/libcastus4public_gentime.o castus4-public/libcastus4public_chomp.o castus4-public/libcastus4public_schedule_object.o castus4-public/libcastus4public_metadata.o
 	rm -fv $@
@@ -100,5 +102,11 @@ showmeta: showmeta.o libcastus4public.a
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 showmeta.o: showmeta.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+autochop1: autochop1.o libcastus4public.a
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+autochop1.o: autochop1.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
