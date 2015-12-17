@@ -1,5 +1,5 @@
 
-TARGETS=parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3
+TARGETS=parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3 showmeta
 
 CFLAGS_COMMON=-I.
 
@@ -26,7 +26,7 @@ CC ?= gcc
 AR ?= ar
 LD ?= ld
 
-all: parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3
+all: parsetime gentime loadschedule lintschedule lintschedule2 lintschedule3 showmeta
 
 clean:
 	rm -fv *.a *.la *.o */*.o $(TARGETS)
@@ -41,7 +41,7 @@ install: libcastus4public.a
 	mkdir -p $(DESTDIR)$(PREFIX)/include/castus4-public
 	cp -v castus4-public/*.h $(DESTDIR)$(PREFIX)/include/castus4-public/
 
-libcastus4public.a: castus4-public/libcastus4public_parsetime.o castus4-public/libcastus4public_gentime.o castus4-public/libcastus4public_chomp.o castus4-public/libcastus4public_schedule_object.o
+libcastus4public.a: castus4-public/libcastus4public_parsetime.o castus4-public/libcastus4public_gentime.o castus4-public/libcastus4public_chomp.o castus4-public/libcastus4public_schedule_object.o castus4-public/libcastus4public_metadata.o
 	rm -fv $@
 	$(AR) r $@ $^
 
@@ -49,6 +49,9 @@ castus4-public/libcastus4public_chomp.o: castus4-public/libcastus4public_chomp.c
 	$(CC) $(CXXFLAGS) -c -o $@ $^
 
 castus4-public/libcastus4public_gentime.o: castus4-public/libcastus4public_gentime.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+castus4-public/libcastus4public_metadata.o: castus4-public/libcastus4public_metadata.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
 castus4-public/libcastus4public_parsetime.o: castus4-public/libcastus4public_parsetime.cpp
@@ -91,5 +94,11 @@ lintschedule3: lintschedule3.o libcastus4public.a
 	$(CXX) -o $@ $^ $(LDFLAGS)
 
 lintschedule3.o: lintschedule3.cpp
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
+
+showmeta: showmeta.o libcastus4public.a
+	$(CXX) -o $@ $^ $(LDFLAGS)
+
+showmeta.o: showmeta.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
