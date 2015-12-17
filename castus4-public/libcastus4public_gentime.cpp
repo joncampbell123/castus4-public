@@ -50,10 +50,15 @@ string castus4_schedule_print_time(int stm_type,const struct tm *stm,unsigned lo
 	}
 
 	/* hours, minutes, seconds */
-	w += snprintf(w,(size_t)(wf-w),"%d:%02d:%02d",
-		((stm->tm_hour+11)%12)+1,		/* 0, 1, 2, 3... -> 11, 0, 1, 2... -> 12, 1, 2, 3... */
-		stm->tm_min,
-		stm->tm_sec);
+	if (stm_us == 0UL && stm->tm_sec == 0)
+		w += snprintf(w,(size_t)(wf-w),"%d:%02d",
+			((stm->tm_hour+11)%12)+1,		/* 0, 1, 2, 3... -> 11, 0, 1, 2... -> 12, 1, 2, 3... */
+			stm->tm_min);
+	else
+		w += snprintf(w,(size_t)(wf-w),"%d:%02d:%02d",
+			((stm->tm_hour+11)%12)+1,		/* 0, 1, 2, 3... -> 11, 0, 1, 2... -> 12, 1, 2, 3... */
+			stm->tm_min,
+			stm->tm_sec);
 
 	if (stm_us != 0) {
 		if ((stm_us % 10000UL) != 0)
