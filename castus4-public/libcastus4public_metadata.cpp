@@ -53,7 +53,8 @@ bool castus4public_metadata_list::read_metadata(const char *path) {
 		 *
 		 * If multiple entries occur, they are assumed to be multi-line tags. This is a recent addition to the Castus 4 standard.
 		 * Prior versions assume name=value pair per line and that repeats overwrite earlier values. Note that some parts of
-		 * Castus 4 still assume single line pairs and some fields including duration and file type should not be multi-line. */
+		 * Castus 4 still assume single line pairs and some fields including duration and file type should not be multi-line.
+		 * If you do use the multi-line mode, make sure the multiple lines are stored next to each other (no other tags inbetween). */
 		if (list.find(line) == list.end())
 			list[line] = equ;
 		else
