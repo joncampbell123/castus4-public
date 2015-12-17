@@ -32,7 +32,7 @@ bool castus4public_metadata_list::read_metadata(const char *path) {
 	fp = fopen(path,"r");
 	if (!fp) return false;
 
-	/* Linux/POSIX offers file locking. Castus uses file locking for the metadata directory. We do too.
+	/* Linux/POSIX offers file locking. Castus uses file locking for the metadata file. We do too.
 	 * You can skip this step but then you risk reading an incomplete metadata file if the user is updating
 	 * metadata from the web UI at exactly the same time */
 	if (::flock(fileno(fp),LOCK_EX)) {
