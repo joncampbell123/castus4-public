@@ -14,12 +14,13 @@
 #include <castus4-public/libcastus4public_gentime.h>
 #include <castus4-public/libcastus4public_schedule_object.h>
 
+#include <algorithm>
 #include <string>
 #include <vector>
 #include <list>
 #include <map>
 
-void Castus4publicSchedule::common_std_map_name_value_pair_entry(std::map<std::string,std::string> &entry,std::string &name,std::string &value) {
+void Castus4publicSchedule::common_std_map_name_value_pair_entry(std::map<std::string,std::string> &entry,const std::string &name,const std::string &value) {
 	std::map<std::string,std::string>::iterator entry_i = entry.find(name);
 	if (entry_i == entry.end())
 		entry[name] = value;
@@ -29,23 +30,23 @@ void Castus4publicSchedule::common_std_map_name_value_pair_entry(std::map<std::s
 	}
 }
 
-Castus4publicSchedule::ScheduleItem::ScheduleItem() {
+Castus4publicSchedule::ScheduleItem::ScheduleItem(const int schedule_type) : schedule_type(schedule_type) {
 }
 
 Castus4publicSchedule::ScheduleItem::~ScheduleItem() {
 }
 
-void Castus4publicSchedule::ScheduleItem::takeNameValuePair(std::string &name,std::string &value) {
+void Castus4publicSchedule::ScheduleItem::takeNameValuePair(const std::string &name,const std::string &value) {
 	common_std_map_name_value_pair_entry(/*&*/entry,name,value);
 }
 
-Castus4publicSchedule::ScheduleBlock::ScheduleBlock() {
+Castus4publicSchedule::ScheduleBlock::ScheduleBlock(const int schedule_type) : schedule_type(schedule_type) {
 }
 
 Castus4publicSchedule::ScheduleBlock::~ScheduleBlock() {
 }
 
-void Castus4publicSchedule::ScheduleBlock::takeNameValuePair(std::string &name,std::string &value) {
+void Castus4publicSchedule::ScheduleBlock::takeNameValuePair(const std::string &name,const std::string &value) {
 	common_std_map_name_value_pair_entry(/*&*/entry,name,value);
 }
 
@@ -124,7 +125,7 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 
 				if (entry == "") {
 					entry_mode = Item;
-					schedule_items.push_back(ScheduleItem());
+					schedule_items.push_back(ScheduleItem(schedule_type));
 				}
 				else if (!strncasecmp(entry.c_str(),"defaults,",9)) {
 					const char *s = entry.c_str()+9;
@@ -147,7 +148,7 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 				}
 				else if (entry == "schedule block") {
 					entry_mode = ScheduleBlockItem;
-					schedule_blocks.push_back(ScheduleBlock());
+					schedule_blocks.push_back(ScheduleBlock(schedule_type));
 				}
 				else {
 					entry_mode = Unknown;
@@ -305,5 +306,294 @@ bool Castus4publicSchedule::write_out(writeout_cb_t f,void *opaque) {
 	}
 
 	return true;
+}
+
+void Castus4publicSchedule::sort_schedule_items() {
+	schedule_items.sort();
+}
+
+void Castus4publicSchedule::sort_schedule_blocks() {
+	schedule_blocks.sort();
+}
+
+void Castus4publicSchedule::sort_schedule_items_rev() { // TESTING only
+	schedule_items.sort();
+	schedule_items.reverse();
+}
+
+void Castus4publicSchedule::sort_schedule_blocks_rev() { // TESTING only
+	schedule_blocks.sort();
+	schedule_blocks.reverse();
+}
+
+const char *Castus4publicSchedule::ScheduleItem::getValue(const char *name) const {
+	std::map<std::string,std::string>::const_iterator i = entry.find(name);
+	if (i == entry.end()) return NULL;
+	return i->second.c_str();
+}
+
+void Castus4publicSchedule::ScheduleItem::setValue(const char *name,const char *value) {
+	entry[name] = value;
+}
+
+void Castus4publicSchedule::ScheduleItem::setValue(const char *name,const std::string &value) {
+	entry[name] = value;
+}
+
+void Castus4publicSchedule::ScheduleItem::deleteValue(const char *name) {
+	std::map<std::string,std::string>::iterator i = entry.find(name);
+	if (i != entry.end()) entry.erase(i);
+}
+
+const char *Castus4publicSchedule::ScheduleBlock::getValue(const char *name) const {
+	std::map<std::string,std::string>::const_iterator i = entry.find(name);
+	if (i == entry.end()) return NULL;
+	return i->second.c_str();
+}
+
+void Castus4publicSchedule::ScheduleBlock::setValue(const char *name,const char *value) {
+	entry[name] = value;
+}
+
+void Castus4publicSchedule::ScheduleBlock::setValue(const char *name,const std::string &value) {
+	entry[name] = value;
+}
+
+void Castus4publicSchedule::ScheduleBlock::deleteValue(const char *name) {
+	std::map<std::string,std::string>::iterator i = entry.find(name);
+	if (i != entry.end()) entry.erase(i);
+}
+
+Castus4publicSchedule::ideal_time_t Castus4publicSchedule::time_tm_to_ideal_time(const struct tm &t,const unsigned long usec,const int schedule_type) {
+	ideal_time_t res = 0;
+
+	if (schedule_type == C4_SCHED_TYPE_WEEKLY)
+		res += (ideal_time_t)t.tm_wday;
+	else if (schedule_type != C4_SCHED_TYPE_DAILY)
+		res += (ideal_time_t)(t.tm_mday-1);
+	if (schedule_type == C4_SCHED_TYPE_YEARLY)
+		res += (ideal_time_t)t.tm_mon;
+
+	res *= (ideal_time_t)ideal_hour_per_day;
+	res += (ideal_time_t)t.tm_hour;
+
+	res *= (ideal_time_t)ideal_min_per_hour;
+	res += (ideal_time_t)t.tm_min;
+
+	res *= (ideal_time_t)ideal_sec_per_min;
+	res += (ideal_time_t)t.tm_sec;
+
+	res *= (ideal_time_t)ideal_microsec_per_sec;
+	res += (ideal_time_t)usec;
+	return res;
+}
+
+void Castus4publicSchedule::ideal_time_to_time_tm(struct tm &tm,unsigned long &usec,ideal_time_t t,const int schedule_type) {
+	usec = (unsigned long)(t % (ideal_time_t)ideal_microsec_per_sec);
+	t /= (ideal_time_t)ideal_microsec_per_sec;
+
+	tm.tm_isdst = -1;
+	tm.tm_wday = 0;
+	tm.tm_mday = 1;
+	tm.tm_year = 0;
+	tm.tm_mon = 0;
+
+	tm.tm_sec = (int)(t % (ideal_time_t)ideal_sec_per_min);
+	t /= (ideal_time_t)ideal_sec_per_min;
+
+	tm.tm_min = (int)(t % (ideal_time_t)ideal_min_per_hour);
+	t /= (ideal_time_t)ideal_min_per_hour;
+
+	tm.tm_hour = (int)(t % (ideal_time_t)ideal_hour_per_day);
+	t /= (ideal_time_t)ideal_hour_per_day;
+
+	if (schedule_type == C4_SCHED_TYPE_WEEKLY)
+		tm.tm_wday = (int)t;
+	else if (schedule_type == C4_SCHED_TYPE_MONTHLY)
+		tm.tm_mday = (int)t + 1;
+	else if (schedule_type == C4_SCHED_TYPE_YEARLY) {
+		tm.tm_mday = ((int)(t % (ideal_time_t)ideal_day_per_month)) + 1;
+		tm.tm_mon = (int)(t / (ideal_time_t)ideal_day_per_month);
+	}
+}
+
+bool Castus4publicSchedule::ScheduleItem::operator<(const ScheduleItem &a) const {
+	return (getStartTime() < a.getStartTime());
+}
+
+bool Castus4publicSchedule::ScheduleItem::operator==(const ScheduleItem &a) const {
+	return (getStartTime() == a.getStartTime());
+}
+
+bool Castus4publicSchedule::ScheduleBlock::operator<(const ScheduleBlock &a) const {
+	return (getStartTime() < a.getStartTime());
+}
+
+bool Castus4publicSchedule::ScheduleBlock::operator==(const ScheduleBlock &a) const {
+	return (getStartTime() == a.getStartTime());
+}
+
+Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ScheduleItem::getStartTime() const {
+	const char *val = getValue("start");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	unsigned long sub_us = 0;
+	struct tm t = castus4_schedule_parse_time(val,&sub_us,&sch_type);
+
+	return Castus4publicSchedule::time_tm_to_ideal_time(t,sub_us,sch_type);
+}
+
+bool Castus4publicSchedule::ScheduleItem::getStartTimeTm(struct tm &t,unsigned long &usec) const {
+	const char *val = getValue("start");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	t = castus4_schedule_parse_time(val,&usec,&sch_type);
+	return true;
+}
+
+Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ScheduleItem::getEndTime() const {
+	const char *val = getValue("end");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	unsigned long sub_us = 0;
+	struct tm t = castus4_schedule_parse_time(val,&sub_us,&sch_type);
+
+	return Castus4publicSchedule::time_tm_to_ideal_time(t,sub_us,sch_type);
+}
+
+bool Castus4publicSchedule::ScheduleItem::getEndTimeTm(struct tm &t,unsigned long &usec) const {
+	const char *val = getValue("end");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	t = castus4_schedule_parse_time(val,&usec,&sch_type);
+	return true;
+}
+
+Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ScheduleBlock::getStartTime() const {
+	const char *val = getValue("start");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	unsigned long sub_us = 0;
+	struct tm t = castus4_schedule_parse_time(val,&sub_us,&sch_type);
+
+	return Castus4publicSchedule::time_tm_to_ideal_time(t,sub_us,sch_type);
+}
+
+bool Castus4publicSchedule::ScheduleBlock::getStartTimeTm(struct tm &t,unsigned long &usec) const {
+	const char *val = getValue("start");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	t = castus4_schedule_parse_time(val,&usec,&sch_type);
+	return true;
+}
+
+Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ScheduleBlock::getEndTime() const {
+	const char *val = getValue("end");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	unsigned long sub_us = 0;
+	struct tm t = castus4_schedule_parse_time(val,&sub_us,&sch_type);
+
+	return Castus4publicSchedule::time_tm_to_ideal_time(t,sub_us,sch_type);
+}
+
+bool Castus4publicSchedule::ScheduleBlock::getEndTimeTm(struct tm &t,unsigned long &usec) const {
+	const char *val = getValue("end");
+	if (val == NULL) return Castus4publicSchedule::ideal_time_t_invalid;
+
+	int sch_type = 0;
+	t = castus4_schedule_parse_time(val,&usec,&sch_type);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleItem::setStartTimeTm(const struct tm &t,unsigned long usec) {
+	std::string str = castus4_schedule_print_time(schedule_type,&t,usec);
+	setValue("start",str);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleBlock::setStartTimeTm(const struct tm &t,unsigned long usec) {
+	std::string str = castus4_schedule_print_time(schedule_type,&t,usec);
+	setValue("start",str);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleItem::setEndTimeTm(const struct tm &t,unsigned long usec) {
+	std::string str = castus4_schedule_print_time(schedule_type,&t,usec);
+	setValue("end",str);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleBlock::setEndTimeTm(const struct tm &t,unsigned long usec) {
+	std::string str = castus4_schedule_print_time(schedule_type,&t,usec);
+	setValue("end",str);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleItem::setStartTime(const ideal_time_t t) {
+	unsigned long usec;
+	struct tm tm;
+
+	Castus4publicSchedule::ideal_time_to_time_tm(tm,usec,t,schedule_type);
+	setStartTimeTm(tm,usec);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleBlock::setStartTime(const ideal_time_t t) {
+	unsigned long usec;
+	struct tm tm;
+
+	Castus4publicSchedule::ideal_time_to_time_tm(tm,usec,t,schedule_type);
+	setStartTimeTm(tm,usec);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleItem::setEndTime(const ideal_time_t t) {
+	unsigned long usec;
+	struct tm tm;
+
+	Castus4publicSchedule::ideal_time_to_time_tm(tm,usec,t,schedule_type);
+	setEndTimeTm(tm,usec);
+	return true;
+}
+
+bool Castus4publicSchedule::ScheduleBlock::setEndTime(const ideal_time_t t) {
+	unsigned long usec;
+	struct tm tm;
+
+	Castus4publicSchedule::ideal_time_to_time_tm(tm,usec,t,schedule_type);
+	setEndTimeTm(tm,usec);
+	return true;
+}
+
+const char* Castus4publicSchedule::ScheduleItem::getItem() const {
+	return getValue("item");
+}
+
+const char* Castus4publicSchedule::ScheduleBlock::getBlockName() const {
+	return getValue("block");
+}
+
+void Castus4publicSchedule::ScheduleItem::setItem(const char *str) {
+	setValue("item",str);
+}
+
+void Castus4publicSchedule::ScheduleItem::setItem(const std::string &str) {
+	setValue("item",str);
+}
+
+void Castus4publicSchedule::ScheduleBlock::setBlockName(const char *str) {
+	setValue("block",str);
+}
+
+void Castus4publicSchedule::ScheduleBlock::setBlockName(const std::string &str) {
+	setValue("block",str);
 }
 

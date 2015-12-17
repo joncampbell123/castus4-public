@@ -26,7 +26,7 @@ static const char *castus4_schedule_dayofweek[7] = {
 	"sat"
 };
 
-string castus4_schedule_print_time(int stm_type,struct tm *stm,unsigned long stm_us) {
+string castus4_schedule_print_time(int stm_type,const struct tm *stm,unsigned long stm_us) {
 	char tmp[256],*w=tmp,*wf=tmp+sizeof(tmp)-1;
 
 	if (stm == NULL) return "";
@@ -50,10 +50,19 @@ string castus4_schedule_print_time(int stm_type,struct tm *stm,unsigned long stm
 	}
 
 	/* hours, minutes, seconds */
-	w += snprintf(w,(size_t)(wf-w),"%d:%02d:%02d %s ",
+	w += snprintf(w,(size_t)(wf-w),"%d:%02d:%02d",
 		((stm->tm_hour+11)%12)+1,		/* 0, 1, 2, 3... -> 11, 0, 1, 2... -> 12, 1, 2, 3... */
 		stm->tm_min,
-		stm->tm_sec,
+		stm->tm_sec);
+
+	if (stm_us != 0) {
+		if ((stm_us % 10000UL) != 0)
+			w += snprintf(w,(size_t)(wf-w),".%06lu",stm_us);
+		else
+			w += snprintf(w,(size_t)(wf-w),".%02lu",stm_us / 10000UL);
+	}
+
+	w += snprintf(w,(size_t)(wf-w)," %s ",
 		(stm->tm_hour >= 12) ? "pm" : "am");
 
 	assert(w <= wf);

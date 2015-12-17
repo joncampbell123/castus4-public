@@ -45,6 +45,8 @@ int main(int argc,char **argv) {
 	schedule.end_load();
 	fclose(fp);
 
+	schedule.sort_schedule_items();
+	schedule.sort_schedule_blocks();
 	if (!schedule.write_out(cout))
 		fprintf(stderr,"Error while writing schedule\n");
 

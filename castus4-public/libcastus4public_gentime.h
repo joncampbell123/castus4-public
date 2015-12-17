@@ -11,5 +11,5 @@
 
 #include <string>
 
-std::string castus4_schedule_print_time(int stm_type,struct tm *stm,unsigned long stm_us=0);
+std::string castus4_schedule_print_time(int stm_type,const struct tm *stm,unsigned long stm_us=0);
 
