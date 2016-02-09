@@ -43,9 +43,8 @@ int main(int argc,char **argv) {
 	schedule.end_load();
 	fclose(fp);
 
-	printf("Schedule type: ");
-	cout << schedule.type();
-	printf("\n");
+	cout << "Schedule type: " << schedule.type() << endl;
+
 	printf("Interval length: %u days\n",schedule.interval_length);
 
 	printf("Global-level entries:\n");
