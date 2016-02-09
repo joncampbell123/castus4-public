@@ -1,9 +1,12 @@
 
 #include <castus4-public/libcastus4public_schedule_helpers.h>
+#include <castus4-public/libcastus4public_chomp.h>
+#include <string.h>
+
 
 namespace Castus4publicScheduleHelpers {
 
-    bool load(Castus4publicSchedule &schedule, std::string file) {
+    bool load(class Castus4publicSchedule &schedule, std::string file) {
 	    FILE *fp;
     	char line[1024];
 

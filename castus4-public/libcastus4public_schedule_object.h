@@ -1,4 +1,7 @@
 
+#ifndef Castus4publicSchedule_h
+#define Castus4publicSchedule_h
+
 #include <stdio.h>
 
 #include <iostream>
@@ -137,4 +140,6 @@ public:
 	int						schedule_type;
 	int						interval_length;
 };
+
+#endif // Castus4publicSchedule_h
 
