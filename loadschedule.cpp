@@ -44,14 +44,7 @@ int main(int argc,char **argv) {
 	fclose(fp);
 
 	printf("Schedule type: ");
-	switch (schedule.schedule_type) {
-		case C4_SCHED_TYPE_NONE:	printf("None"); break;
-		case C4_SCHED_TYPE_DAILY:	printf("Daily"); break;
-		case C4_SCHED_TYPE_WEEKLY:	printf("Weekly"); break;
-		case C4_SCHED_TYPE_MONTHLY:	printf("Monthly"); break;
-		case C4_SCHED_TYPE_YEARLY:	printf("Yearly"); break;
-		case C4_SCHED_TYPE_INTERVAL:	printf("Interval"); break;
-	};
+	cout << schedule.type();
 	printf("\n");
 	printf("Interval length: %u days\n",schedule.interval_length);
 
