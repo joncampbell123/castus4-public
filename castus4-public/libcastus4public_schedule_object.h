@@ -19,6 +19,9 @@ public:
 	static const unsigned int			ideal_day_per_month = 31;
 	static const unsigned int			ideal_month_per_year = 12;
 
+    // The schedule type as a string
+    std::string type();
+
 	// "ideal time t" is duration from start of schedule in microseconds
 	typedef signed long long			ideal_time_t;
 

@@ -597,3 +597,21 @@ void Castus4publicSchedule::ScheduleBlock::setBlockName(const std::string &str) 
 	setValue("block",str);
 }
 
+/**
+* Returns the schedule type as a string
+*
+* \returns "None", "Daily", "Weekly", "Monthly", "Yearly" or "Interval" depending on schedule_type
+**/
+std::string Castus4publicSchedule::type() {
+	switch (schedule_type) {
+		case C4_SCHED_TYPE_NONE:	return "None";
+		case C4_SCHED_TYPE_DAILY:	return "Daily";
+		case C4_SCHED_TYPE_WEEKLY:	return "Weekly";
+		case C4_SCHED_TYPE_MONTHLY:	return "Monthly";
+		case C4_SCHED_TYPE_YEARLY:	return "Yearly";
+		case C4_SCHED_TYPE_INTERVAL: return "Interval";
+	};
+    return "None";
+}
+
+
