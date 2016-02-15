@@ -1,4 +1,7 @@
 
+#ifndef Castus4publicSchedule_h
+#define Castus4publicSchedule_h
+
 #include <stdio.h>
 
 #include <iostream>
@@ -18,6 +21,9 @@ public:
 	static const unsigned int			ideal_day_per_week = 7;
 	static const unsigned int			ideal_day_per_month = 31;
 	static const unsigned int			ideal_month_per_year = 12;
+
+    // The schedule type as a string
+    std::string type();
 
 	// "ideal time t" is duration from start of schedule in microseconds
 	typedef signed long long			ideal_time_t;
@@ -134,4 +140,6 @@ public:
 	int						schedule_type;
 	int						interval_length;
 };
+
+#endif // Castus4publicSchedule_h
 
