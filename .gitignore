@@ -29,3 +29,43 @@
 
 # Vim swap files
 *.sw?
+
+# Autotools built files
+.libs/
+Makefile
+Makefile.in
+aclocal.m4
+ar-lib
+autom4te.cache/
+castus4-public/.deps/
+castus4-public/.dirstamp
+compile
+config.guess
+config.h
+config.h.in
+config.h.in~
+config.log
+config.status
+config.sub
+configure
+depcomp
+install-sh
+libtool
+
+# Output files
+autochop1
+castus4public.pc
+castus4public_demo_gentime
+castus4public_demo_parsetime
+lintschedule
+lintschedule2
+lintschedule3
+loadschedule
+ltmain.sh
+m4/
+missing
+showmeta
+stamp-h1
+
+# Autotools generates these for us
+AUTHORS

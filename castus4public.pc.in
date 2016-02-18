@@ -1,0 +1,13 @@
+
+prefix=@prefix@
+exec_prefix=@exec_prefix@
+libdir=@libdir@
+includedir=@includedir@
+
+Name: castus4public
+Description: Castus 4.0 public API and helper tools
+Version: @PACKAGE_VERSION@
+Conflicts:
+Libs: -lcastus4public
+Cflags:
+
