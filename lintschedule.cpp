@@ -9,11 +9,11 @@
 #include <ctype.h>
 #include <math.h>
 
-#include <castus4-public/libcastus4public_schedule.h>
-#include <castus4-public/libcastus4public_parsetime.h>
-#include <castus4-public/libcastus4public_gentime.h>
-#include <castus4-public/libcastus4public_chomp.h>
-#include <castus4-public/libcastus4public_schedule_object.h>
+#include <castus4-public/schedule.h>
+#include <castus4-public/parsetime.h>
+#include <castus4-public/gentime.h>
+#include <castus4-public/chomp.h>
+#include <castus4-public/schedule_object.h>
 
 using namespace std;
 

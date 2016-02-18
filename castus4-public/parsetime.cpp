@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include <castus4-public/libcastus4public_schedule.h>
-#include <castus4-public/libcastus4public_parsetime.h>
+#include <castus4-public/schedule.h>
+#include <castus4-public/parsetime.h>
 
 struct tm castus4_schedule_parse_time(const char *v,unsigned long *sub_us,int *sched_type) {
 	int pm = 0,ampm = 0,next = 0,next_type = 0/*daily schedule*/;

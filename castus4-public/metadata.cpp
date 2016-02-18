@@ -10,8 +10,8 @@
 #include <ctype.h>
 #include <math.h>
 
-#include <castus4-public/libcastus4public_metadata.h>
-#include <castus4-public/libcastus4public_chomp.h>
+#include <castus4-public/metadata.h>
+#include <castus4-public/chomp.h>
 
 const char *castus4public_metadir_prefix = ".castusmeta.";
 

@@ -54,9 +54,9 @@ libtool
 
 # Output files
 autochop1
-castus4public.pc
-castus4public_demo_gentime
-castus4public_demo_parsetime
+castus4-public.pc
+castus4-public_demo_gentime
+castus4-public_demo_parsetime
 lintschedule
 lintschedule2
 lintschedule3

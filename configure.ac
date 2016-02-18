@@ -3,7 +3,7 @@
 
 # COMMENCE
 AC_PREREQ(2.60)
-AC_INIT(castus4public, 4.01, jonathan@castus.tv)
+AC_INIT(castus4-public, 0.0.1, jonathan@castus.tv)
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADER([config.h])
@@ -41,7 +41,7 @@ AM_CONDITIONAL(LINUX,true)
 LIBS=-lm
 AM_CPPFLAGS="-DLINUX -D_FILE_OFFSET_BITS=64"
 
-AC_CONFIG_FILES(castus4public.pc)
+AC_CONFIG_FILES(castus4-public.pc)
 AC_CONFIG_FILES(Makefile)
 
 AC_OUTPUT
