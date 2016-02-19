@@ -11,8 +11,7 @@ castusheaderdir = $(includedir)/castus4-public
 lib_LTLIBRARIES = \
     libcastus4-public.la
 
-# NOTE: Verify these get subdir'd
-castusheader_HEADERS = include/castus4-public/*
+castusheader_HEADERS = $(top_srcdir)/include/castus4-public/*
 
 bin_PROGRAMS = \
     castus4-public_demo_parsetime \
