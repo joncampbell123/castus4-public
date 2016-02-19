@@ -10,7 +10,7 @@
 #include <ctype.h>
 #include <math.h>
 
-#include <castus4-public/libcastus4public_metadata.h>
+#include <castus4-public/metadata.h>
 
 using namespace std;
 

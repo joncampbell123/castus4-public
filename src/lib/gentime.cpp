@@ -9,8 +9,8 @@
 #include <ctype.h>
 #include <math.h>
 
-#include <castus4-public/libcastus4public_schedule.h>
-#include <castus4-public/libcastus4public_gentime.h>
+#include <castus4-public/schedule.h>
+#include <castus4-public/gentime.h>
 
 using namespace std;
 

@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#include <castus4-public/libcastus4public_parsetime.h>
+#include <castus4-public/parsetime.h>
 
 using namespace std;
 

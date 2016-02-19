@@ -1,6 +1,6 @@
 
-#include <castus4-public/libcastus4public_schedule_helpers.h>
-#include <castus4-public/libcastus4public_chomp.h>
+#include <castus4-public/schedule_helpers.h>
+#include <castus4-public/chomp.h>
 #include <string.h>
 
 
