@@ -6,7 +6,6 @@ AC_PREREQ(2.60)
 AC_INIT(castus4-public, 0.0.1, jonathan@castus.tv)
 AM_INIT_AUTOMAKE([subdir-objects])
 AC_CONFIG_SRCDIR([configure.ac])
-AC_CONFIG_HEADER([config.h])
 AC_CONFIG_MACRO_DIR([m4])
 AC_PREFIX_DEFAULT(/usr/local)
 
@@ -38,8 +37,10 @@ AC_CHECK_FUNCS([memset])
 AM_CONDITIONAL(WIN32,false)
 AM_CONDITIONAL(LINUX,true)
 
+# Platform behavior
+AC_SYS_LARGEFILE
+
 LIBS=-lm
-AM_CPPFLAGS="-DLINUX -D_FILE_OFFSET_BITS=64"
 
 AC_CONFIG_FILES(castus4-public.pc)
 AC_CONFIG_FILES(Makefile)
