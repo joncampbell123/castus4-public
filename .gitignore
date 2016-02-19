@@ -31,14 +31,14 @@
 *.sw?
 
 # Autotools built files
+.deps/
+.dirstamp
 .libs/
 Makefile
 Makefile.in
 aclocal.m4
 ar-lib
 autom4te.cache/
-castus4-public/.deps/
-castus4-public/.dirstamp
 compile
 config.guess
 config.h
