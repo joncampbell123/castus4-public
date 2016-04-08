@@ -1,7 +1,6 @@
 
-ACLOCAL_AMFLAGS = -I m4
-
-AM_CPPFLAGS = -I$(top_srcdir)/include
+ACLOCAL_AMFLAGS = -I m4 
+AM_CPPFLAGS = -I$(top_srcdir)/include -std=c++11 
 
 pkgconfiglibdir = $(libdir)/pkgconfig
 # This REALLY should be based in libexec!
@@ -36,7 +35,8 @@ libcastus4_public_la_SOURCES = \
     src/lib/metadata.cpp \
     src/lib/parsetime.cpp \
     src/lib/schedule_object.cpp \
-    src/lib/schedule_helpers.cpp
+    src/lib/schedule_helpers.cpp \
+    src/lib/c_schedule.cpp
 
 castus4_public_demo_parsetime_SOURCES = src/bin/parsetime.cpp
 castus4_public_demo_parsetime_LDADD = libcastus4-public.la
