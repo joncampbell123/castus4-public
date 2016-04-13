@@ -110,7 +110,7 @@ extern "C" {
     }
 
     int block_entry_count( Castus4publicSchedule::ScheduleBlock *self ) {
-        self->entry.size();
+        return self->entry.size();
     }
 
     // TODO use iterator math
@@ -143,7 +143,7 @@ extern "C" {
     }
 
     int item_entry_count( Castus4publicSchedule::ScheduleItem *self ) {
-        self->entry.size();
+        return self->entry.size();
     }
 
     // TODO use iterator math
