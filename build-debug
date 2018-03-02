@@ -1,0 +1,69 @@
+#!/bin/bash
+# Error out if commands fail
+set -e
+
+declare WORKDIR="${1:-.}"
+declare CFLAGS='' CXXFLAGS=''
+declare -a TMP_FLAGS
+pushd "${WORKDIR}"
+
+if [[ `uname -m` = i686 ]]; then
+    TMP_FLAGS+=( -march=athlon-xp -msse2 -msse -mmmx )
+fi
+
+TMP_FLAGS+=(
+    -g0
+    -O3
+    -finline-functions
+    -fno-keep-static-consts
+    -fmerge-constants
+    -fmerge-all-constants
+    -fdelete-null-pointer-checks
+    -fgcse
+    -fgcse-lm
+    -fgcse-sm
+    -foptimize-register-move
+    -fexpensive-optimizations
+    -fstrict-aliasing
+    -frename-registers
+)
+
+export CFLAGS="${TMP_FLAGS[*]}" CXXFLAGS="${TMP_FLAGS[*]}"
+
+# HACK:
+# we need C++11. Castus ships with GCC 4.6.3.
+# later updates have GCC 4.8.3. We need the 4.8 one.
+# if the user provides $CC then the user knows best.
+if [[ "$CC" == "" ]]; then export CC=gcc; fi
+x=`$CC --version | grep ^gcc | cut -d ' ' -f 3`
+echo "GCC version $x"
+if [[ "$x" == "4.6.3" ]]; then
+	if [[ -d /usr/gcc-4.8/bin ]]; then
+		export CC=/usr/gcc-4.8/bin/gcc
+	fi
+fi
+
+if [[ "$CPP" == "" ]]; then export CPP=cpp; fi
+x=`$CPP --version | grep ^cpp | cut -d ' ' -f 3`
+echo "CPP version $x"
+if [[ "$x" == "4.6.3" ]]; then
+	if [[ -d /usr/gcc-4.8/bin ]]; then
+		export CPP=/usr/gcc-4.8/bin/cpp
+	fi
+fi
+
+if [[ "$CXX" == "" ]]; then export CXX=g++; fi
+x=`$CXX --version | grep ^g++ | cut -d ' ' -f 3`
+echo "CXX version $x"
+if [[ "$x" == "4.6.3" ]]; then
+	if [[ -d /usr/gcc-4.8/bin ]]; then
+		export CXX=/usr/gcc-4.8/bin/g++
+	fi
+fi
+# END HACK
+
+./autogen.sh
+./configure --prefix=/usr --sysconfdir=/etc \
+    --enable-debug \
+    "$("$(dirname "$0")"/castus-libdir-var)"
+make -j"$(nproc)"
