@@ -107,6 +107,31 @@ int main() {
         double duration = strtod(duration_str,NULL);
         if (duration < 0.1) continue;
 
+	{
+		const char *m = meta.getValue("out");
+		if (m != NULL && *m != 0) {
+			double v = strtod(m,NULL);
+			if (v >= 0 && duration > v) duration = v;
+			sci->setValue("out",m);
+		}
+		else {
+			sci->deleteValue("out");
+		}
+	}
+
+	{
+		const char *m = meta.getValue("in");
+		if (m != NULL && *m != 0) {
+			double v = strtod(m,NULL);
+			if (v >= 0) duration -= v;
+			if (duration < 0.01) duration = 0.01;
+			sci->setValue("in",m);
+		}
+		else {
+			sci->deleteValue("in");
+		}
+	}
+
         {
             char tmp[128];
             sprintf(tmp,"%.3f",duration);
