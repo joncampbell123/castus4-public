@@ -367,24 +367,33 @@ void Castus4publicSchedule::ScheduleBlock::deleteValue(const char *name) {
 Castus4publicSchedule::ideal_time_t Castus4publicSchedule::time_tm_to_ideal_time(const struct tm &t,const unsigned long usec,const int schedule_type) {
 	ideal_time_t res = 0;
 
+	if (schedule_type == C4_SCHED_TYPE_YEARLY) {
+		res += (ideal_time_t)t.tm_mon;
+		res *= (ideal_time_t)ideal_day_per_month;
+	}
+
 	if (schedule_type == C4_SCHED_TYPE_WEEKLY)
 		res += (ideal_time_t)t.tm_wday;
 	else if (schedule_type != C4_SCHED_TYPE_DAILY)
 		res += (ideal_time_t)(t.tm_mday-1);
-	if (schedule_type == C4_SCHED_TYPE_YEARLY)
-		res += (ideal_time_t)t.tm_mon;
+	// out: res in days
 
 	res *= (ideal_time_t)ideal_hour_per_day;
 	res += (ideal_time_t)t.tm_hour;
+	// out: res in hours
 
 	res *= (ideal_time_t)ideal_min_per_hour;
 	res += (ideal_time_t)t.tm_min;
+	// out: res in minutes
 
 	res *= (ideal_time_t)ideal_sec_per_min;
 	res += (ideal_time_t)t.tm_sec;
+	// out: res in seconds
 
 	res *= (ideal_time_t)ideal_microsec_per_sec;
 	res += (ideal_time_t)usec;
+	// out: res in microseconds
+
 	return res;
 }
 
