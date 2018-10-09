@@ -224,6 +224,34 @@ int main() {
             }
         }
     }
+#else
+    /* if the items overlap only SLIGHTLY, then go ahead and trim back a bit */
+    for (auto sci=schedule.schedule_items.begin();sci!=schedule.schedule_items.end();) {
+        Castus4publicSchedule::ideal_time_t c_start,c_end;
+        Castus4publicSchedule::ideal_time_t n_start,n_end;
+
+        auto c_item = sci;
+
+        sci++;
+        if (sci == schedule.schedule_items.end()) break;
+
+        auto n_item = sci;
+
+        c_start = c_item->getStartTime();
+        c_end = c_item->getEndTime();
+
+        n_start = n_item->getStartTime();
+        n_end = n_item->getEndTime();
+
+        if (c_start != Castus4publicSchedule::ideal_time_t_invalid &&
+            c_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
+            n_start != Castus4publicSchedule::ideal_time_t_invalid &&
+            n_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
+            c_start < c_end && n_start < n_end) {
+            if (c_end > n_start && c_end < (n_start + 500000ull))
+                c_item->setEndTime(n_start);
+        }
+    }
 #endif
 
 	schedule.sort_schedule_items();
