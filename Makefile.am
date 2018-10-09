@@ -81,7 +81,7 @@ showmeta_SOURCES = src/bin/showmeta.cpp
 showmeta_LDADD = libcastus4-public.la
 
 install-data-hook:
-	(cd $(instfilterdir) && mv -vf 'filter-example-check-duration' 'Check duration')
-	(cd $(instfilterdir) && mv -vf 'filter-example-check-duration-and-ripple' 'Check Duration and ripple down')
-	(cd $(instfilterdir) && mv -vf 'filter-example-check-duration-and-ripple-bidi' 'Check Duration and ripple up or down')
+	(cd $(instfilterdir) && mv -vf 'filter-example-check-duration' 'Check durations and match')
+	(cd $(instfilterdir) && mv -vf 'filter-example-check-duration-and-ripple' 'Check durations and ripple down')
+	(cd $(instfilterdir) && mv -vf 'filter-example-check-duration-and-ripple-bidi' 'Check durations and ripple up or down')
 
