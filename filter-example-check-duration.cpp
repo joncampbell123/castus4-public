@@ -143,6 +143,7 @@ int main() {
     }
 
 #ifdef ENABLE_RIPPLE
+# ifdef ENABLE_RIPPLE_UP
     // step 3: ripple up or down connected items
     for (auto sci=schedule.schedule_items.begin();sci!=schedule.schedule_items.end();) {
         Castus4publicSchedule::ideal_time_t c_start,c_end;
@@ -188,7 +189,7 @@ int main() {
         c_item->deleteValue("x-next-joined-gap-us");
         c_item->deleteValue("x-next-joined");
     }
-
+# endif
     // step 4: ripple down overlapping items
     for (auto sci=schedule.schedule_items.begin();sci!=schedule.schedule_items.end();) {
         Castus4publicSchedule::ideal_time_t c_start,c_end;
