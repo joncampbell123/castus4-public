@@ -249,7 +249,7 @@ int main() {
             n_start != Castus4publicSchedule::ideal_time_t_invalid &&
             n_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
             c_start < c_end && n_start < n_end) {
-            if (c_end > n_start && c_end < (n_start + 500000ull))
+            if (c_end > n_start && c_end < (n_start + 1000000ull))
                 c_item->setEndTime(n_start);
         }
     }
