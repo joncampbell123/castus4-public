@@ -26,7 +26,8 @@ noinst_PROGRAMS = \
     lintschedule3 \
     showmeta \
 	filter-example-check-duration \
-	filter-example-check-duration-and-ripple
+	filter-example-check-duration-and-ripple \
+	filter-example-check-duration-and-ripple-bidi
 
 pkgconfiglib_DATA = \
 	castus4-public.pc
@@ -45,6 +46,9 @@ filter_example_check_duration_LDADD = libcastus4-public.la
 
 filter_example_check_duration_and_ripple_SOURCES = filter-example-check-duration-and-ripple.cpp
 filter_example_check_duration_and_ripple_LDADD = libcastus4-public.la
+
+filter_example_check_duration_and_ripple_bidi_SOURCES = filter-example-check-duration-and-ripple-bidi.cpp
+filter_example_check_duration_and_ripple_bidi_LDADD = libcastus4-public.la
 
 castus4_public_demo_parsetime_SOURCES = src/bin/parsetime.cpp
 castus4_public_demo_parsetime_LDADD = libcastus4-public.la
