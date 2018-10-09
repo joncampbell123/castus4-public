@@ -2,6 +2,7 @@
 ACLOCAL_AMFLAGS = -I m4 
 AM_CPPFLAGS = -I$(top_srcdir)/include -std=c++11 
 
+instfilterdir = $(datarootdir)/castus4/filterscripts
 pkgconfiglibdir = $(libdir)/pkgconfig
 # This REALLY should be based in libexec!
 schedfilterdir = /mnt/main/tv/schedule-filters
@@ -25,6 +26,11 @@ noinst_PROGRAMS = \
     lintschedule2 \
     lintschedule3 \
     showmeta \
+	filter-example-check-duration \
+	filter-example-check-duration-and-ripple \
+	filter-example-check-duration-and-ripple-bidi
+
+instfilter_PROGRAMS = \
 	filter-example-check-duration \
 	filter-example-check-duration-and-ripple \
 	filter-example-check-duration-and-ripple-bidi
