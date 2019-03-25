@@ -20,9 +20,7 @@
 
 using namespace std;
 
-int main() {
-    const Castus4publicSchedule::ideal_time_t min_blank_interval = 1000000; /* 1000000us = 1000ms = 1 sec */
-	Castus4publicSchedule schedule;
+void load(Castus4publicSchedule &schedule) {
 	char line[1024];
 
 	schedule.begin_load();
@@ -36,54 +34,54 @@ int main() {
 
     schedule.sort_schedule_items();
     schedule.sort_schedule_blocks();
+}
 
-#ifdef ENABLE_RIPPLE
-    // step 1: add a tag for each item that is touching
+bool is_valid(const Castus4publicSchedule::ScheduleItem &item) {
+    return item.getStartTime() != Castus4publicSchedule::ideal_time_t_invalid &&
+           item.getEndTime() != Castus4publicSchedule::ideal_time_t_invalid &&
+           item.getStartTime() < item.getEndTime();
+}
+
+void tag_touching_item(Castus4publicSchedule &schedule, const Castus4publicSchedule::ideal_time_t min_blank_interval)
+{
     for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto c_item = schedule_item;
+        auto current_item = schedule_item;
 
-        c_item->deleteValue("x-next-joined");
+        current_item->deleteValue("x-next-joined");
 
         schedule_item++;
         if (schedule_item == schedule.schedule_items.end()) break;
 
-        auto n_item = schedule_item;
+        auto next_item = schedule_item;
 
-        auto c_start = c_item->getStartTime();
-        auto c_end = c_item->getEndTime();
+        // auto c_start = current_item->getStartTime();
+        auto c_end = current_item->getEndTime();
 
-        auto n_start = n_item->getStartTime();
-        auto n_end = n_item->getEndTime();
+        auto n_start = next_item->getStartTime();
+        auto n_end = next_item->getEndTime();
 
-        n_item->deleteValue("x-next-joined");
+        next_item->deleteValue("x-next-joined");
 
-        if (c_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            c_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            n_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            n_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            c_start < c_end && n_start < n_end) {
+        // Verify both items are valid
+        if ( is_valid(*current_item) && is_valid(*next_item) ) {
             if ((c_end + min_blank_interval) >= n_start) {
                 char tmp[64];
 
                 if (c_end < n_start) {
                     sprintf(tmp,"%llu",n_start - c_end);
-                    c_item->setValue("x-next-joined-gap-us",tmp);
+                    current_item->setValue("x-next-joined-gap-us",tmp);
                 }
 
-                c_item->setValue("x-next-joined","1");
+                current_item->setValue("x-next-joined","1");
             }
         }
     }
-#endif
+}
 
-    // step 2: check each item, read the duration from metadata, and update the duration from meta
+void update_duration(Castus4publicSchedule &schedule) {
     for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();schedule_item++) {
-        auto c_start = schedule_item->getStartTime();
-        auto c_end = schedule_item->getEndTime();
 
-        if (c_start == Castus4publicSchedule::ideal_time_t_invalid ||
-            c_end ==   Castus4publicSchedule::ideal_time_t_invalid)
-            continue;
+        if (!is_valid(*schedule_item)) continue;
 
         const char *item = schedule_item->getValue("item");
 
@@ -133,38 +131,34 @@ int main() {
             schedule_item->setValue("item duration",tmp);
         }
 
-        c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000);
+        auto c_start = schedule_item->getStartTime();
+        auto c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000);
         schedule_item->setEndTime(c_end);
     }
+}
 
-#ifdef ENABLE_RIPPLE
-# ifdef ENABLE_RIPPLE_UP
-    // step 3: ripple up or down connected items
+void ripple_connected_item(Castus4publicSchedule &schedule) {
     for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto c_item = schedule_item;
+        auto current_item = schedule_item;
 
         schedule_item++;
         if (schedule_item == schedule.schedule_items.end()) break;
 
-        auto n_item = schedule_item;
+        auto next_item = schedule_item;
 
-        auto c_start = c_item->getStartTime();
-        auto c_end = c_item->getEndTime();
+        auto c_start = current_item->getStartTime();
+        auto c_end = current_item->getEndTime();
 
-        auto n_start = n_item->getStartTime();
-        auto n_end = n_item->getEndTime();
+        auto n_start = next_item->getStartTime();
+        auto n_end = next_item->getEndTime();
 
-        if (c_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            c_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            n_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            n_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            c_start < c_end && n_start < n_end) {
-            const char *joined = c_item->getValue("x-next-joined");
+        if ( is_valid(*current_item) && is_valid(*next_item) ) {
+            const char *joined = current_item->getValue("x-next-joined");
             if (joined != NULL && atoi(joined) > 0) {
                 /* no matter whether the item duration grew or shrank, the items remain joined together */
                 unsigned long long gap = 0;
                 unsigned long long old_duration = n_end - n_start;
-                const char *gap_str = c_item->getValue("x-next-joined-gap-us");
+                const char *gap_str = current_item->getValue("x-next-joined-gap-us");
 
                 if (gap_str != NULL)
                     gap = strtoull(gap_str,NULL,0);
@@ -173,35 +167,32 @@ int main() {
                 n_start = c_end + gap;
                 n_end = n_start + old_duration;
 
-                n_item->setStartTime(n_start);
-                n_item->setEndTime(n_end);
+                next_item->setStartTime(n_start);
+                next_item->setEndTime(n_end);
             }
         }
 
-        c_item->deleteValue("x-next-joined-gap-us");
-        c_item->deleteValue("x-next-joined");
+        current_item->deleteValue("x-next-joined-gap-us");
+        current_item->deleteValue("x-next-joined");
     }
-# endif
-    // step 4: ripple down overlapping items
+}
+
+void ripple_down_overlapping(Castus4publicSchedule &schedule) {
     for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto c_item = schedule_item;
+        auto current_item = schedule_item;
 
         schedule_item++;
         if (schedule_item == schedule.schedule_items.end()) break;
 
-        auto n_item = schedule_item;
+        auto next_item = schedule_item;
 
-        auto c_start = c_item->getStartTime();
-        auto c_end = c_item->getEndTime();
+        // auto c_start = current_item->getStartTime();
+        auto c_end = current_item->getEndTime();
 
-        auto n_start = n_item->getStartTime();
-        auto n_end = n_item->getEndTime();
+        auto n_start = next_item->getStartTime();
+        auto n_end = next_item->getEndTime();
 
-        if (c_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            c_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            n_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            n_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            c_start < c_end && n_start < n_end) {
+        if (is_valid(*current_item) && is_valid(*next_item)) {
             if (c_end > n_start) {
                 unsigned long long old_duration = n_end - n_start;
 
@@ -209,36 +200,59 @@ int main() {
                 n_start = c_end;
                 n_end = n_start + old_duration;
 
-                n_item->setStartTime(n_start);
-                n_item->setEndTime(n_end);
+                next_item->setStartTime(n_start);
+                next_item->setEndTime(n_end);
             }
         }
     }
-#else
-    /* if the items overlap only SLIGHTLY, then go ahead and trim back a bit */
+}
+
+void trim_overlapping(Castus4publicSchedule &schedule) {
     for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto c_item = schedule_item;
+        auto current_item = schedule_item;
 
         schedule_item++;
         if (schedule_item == schedule.schedule_items.end()) break;
 
-        auto n_item = schedule_item;
+        auto next_item = schedule_item;
 
-        auto c_start = c_item->getStartTime();
-        auto c_end = c_item->getEndTime();
+        // auto c_start = current_item->getStartTime();
+        auto c_end = current_item->getEndTime();
 
-        auto n_start = n_item->getStartTime();
-        auto n_end = n_item->getEndTime();
+        auto n_start = next_item->getStartTime();
+        auto n_end = next_item->getEndTime();
 
-        if (c_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            c_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            n_start != Castus4publicSchedule::ideal_time_t_invalid &&
-            n_end !=   Castus4publicSchedule::ideal_time_t_invalid &&
-            c_start < c_end && n_start < n_end) {
+        if (is_valid(*current_item) && is_valid(*next_item)) {
             if (c_end > n_start && c_end < (n_start + 1000000ull))
-                c_item->setEndTime(n_start);
+                current_item->setEndTime(n_start);
         }
     }
+}
+
+int main() {
+    const Castus4publicSchedule::ideal_time_t min_blank_interval = 1000000; /* 1000000us = 1000ms = 1 sec */
+	Castus4publicSchedule schedule;
+    load(schedule);
+
+
+#ifdef ENABLE_RIPPLE
+    // step 1: add a tag for each item that is touching
+    tag_touching_item(schedule, min_blank_interval);
+#endif
+
+    // step 2: check each item, read the duration from metadata, and update the duration from meta
+    update_duration(schedule);
+
+#ifdef ENABLE_RIPPLE
+# ifdef ENABLE_RIPPLE_UP
+    // step 3: ripple up or down connected items
+    ripple_connected_item(schedule);
+# endif
+    // step 4: ripple down overlapping items
+    ripple_down_overlapping(schedule);
+#else
+    /* if the items overlap only SLIGHTLY, then go ahead and trim back a bit */
+    trim_overlapping(schedule);
 #endif
 
 	schedule.sort_schedule_items();
