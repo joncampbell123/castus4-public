@@ -47,13 +47,13 @@ libcastus4_public_la_SOURCES = \
     src/lib/schedule_helpers.cpp \
     src/lib/c_schedule.cpp
 
-filter_example_check_duration_SOURCES = filter-example-check-duration.cpp utils.cpp
+filter_example_check_duration_SOURCES = filter-example-check-duration.cpp utils.cpp utils_schedule.cpp
 filter_example_check_duration_LDADD = libcastus4-public.la
 
-filter_example_check_duration_and_ripple_SOURCES = filter-example-check-duration-and-ripple.cpp utils.cpp
+filter_example_check_duration_and_ripple_SOURCES = filter-example-check-duration-and-ripple.cpp utils.cpp utils_schedule.cpp
 filter_example_check_duration_and_ripple_LDADD = libcastus4-public.la
 
-filter_example_check_duration_and_ripple_bidi_SOURCES = filter-example-check-duration-and-ripple-bidi.cpp utils.cpp
+filter_example_check_duration_and_ripple_bidi_SOURCES = filter-example-check-duration-and-ripple-bidi.cpp utils.cpp utils_schedule.cpp
 filter_example_check_duration_and_ripple_bidi_LDADD = libcastus4-public.la
 
 castus4_public_demo_parsetime_SOURCES = src/bin/parsetime.cpp

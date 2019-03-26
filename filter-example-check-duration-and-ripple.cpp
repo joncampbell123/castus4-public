@@ -6,6 +6,7 @@
 #include <castus4-public/schedule_object.h>
 
 #include "utils.h"
+#include "utils_schedule.h"
 
 using namespace std;
 

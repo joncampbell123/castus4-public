@@ -1,68 +1,18 @@
-
-#include <castus4-public/parsetime.h>
-#include <castus4-public/gentime.h>
-#include <castus4-public/chomp.h>
-#include <castus4-public/metadata.h>
 #include <castus4-public/schedule_object.h>
 #include <iostream>
 #include <functional>
 
 #include "utils.h"
+#include "utils_schedule.h"
 
 using namespace std;
 
-void load(Castus4publicSchedule &schedule) {
-	char line[1024];
-
-	schedule.begin_load();
-	memset(line,0,sizeof(line));
-	while (!feof(stdin) && !ferror(stdin)) {
-		if (fgets(line,sizeof(line)-1,stdin) == NULL) break;
-		castus4public_chomp(line);
-		schedule.load_take_line(line);
-	}
-	schedule.end_load();
-
-    schedule.sort_schedule_items();
-    schedule.sort_schedule_blocks();
-}
-
-bool is_valid(const Castus4publicSchedule::ScheduleItem &item) {
-    return item.getStartTime() != Castus4publicSchedule::ideal_time_t_invalid &&
-           item.getEndTime() != Castus4publicSchedule::ideal_time_t_invalid &&
-           item.getStartTime() < item.getEndTime();
-}
-
-bool write(Castus4publicSchedule &schedule) {
-	schedule.sort_schedule_items();
-	schedule.sort_schedule_blocks();
-	if (!schedule.write_out(cout)) {
-		fprintf(stderr,"Error while writing schedule\n");
-        return false;
-    }
-    return true;
-}
-
-void loop(Castus4publicSchedule &schedule,
-        std::function<void (Castus4publicSchedule::ScheduleItem &current_item,
-                    Castus4publicSchedule::ScheduleItem &next_item)> logic) {
-    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto current_item = schedule_item;
-        schedule_item++;
-        if (schedule_item == schedule.schedule_items.end()) break;
-
-        auto next_item = schedule_item;
-
-        if (is_valid(*current_item) && is_valid(*next_item)) logic(*current_item, *next_item);
-    }
-}
-
-void loop(Castus4publicSchedule &schedule,
-        std::function<void (Castus4publicSchedule::ScheduleItem &current_item)> logic) {
-    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();schedule_item++)
-        if (is_valid(*schedule_item)) logic(*schedule_item);
-}
-
+/**
+ * This function takes a schedule and if any two sequential schedule items overlap
+ * it makes the item with `x-next-joined-gap-us`
+ *
+ * \param schedule The Castus schedule
+ **/
 void tag_touching_item(Castus4publicSchedule &schedule)
 {
     const Castus4publicSchedule::ideal_time_t min_blank_interval = 1000000; /* 1000000us = 1000ms = 1 sec */
@@ -94,6 +44,12 @@ void tag_touching_item(Castus4publicSchedule &schedule)
     loop(schedule, logic);
 }
 
+/**
+ * This function takes a schedule and reads the duration out of the metadata and
+ * sets `item duration` to it.
+ *
+ * \param schedule The Castus schedule
+ **/
 void update_duration(Castus4publicSchedule &schedule) {
     auto logic = [](Castus4publicSchedule::ScheduleItem &schedule_item) {
         const char *item = schedule_item.getValue("item");
@@ -144,6 +100,12 @@ void update_duration(Castus4publicSchedule &schedule) {
     loop(schedule, logic);
 }
 
+/**
+ * This function takes a schedule and if any two sequential schedule items overlap
+ * it adjusts the times of the second point
+ *
+ * \param schedule The Castus schedule
+ **/
 void ripple_connected_item(Castus4publicSchedule &schedule) {
     auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
@@ -178,6 +140,12 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
     loop(schedule, logic);
 }
 
+/**
+ * This function takes a schedule and if any two sequential schedule items overlap
+ * it adjusts the times of the second time
+ *
+ * \param schedule The Castus schedule
+ **/
 void ripple_down_overlapping(Castus4publicSchedule &schedule) {
 
     auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
@@ -204,6 +172,12 @@ void ripple_down_overlapping(Castus4publicSchedule &schedule) {
     loop(schedule, logic);
 }
 
+/**
+ * This function takes a schedule and if any two sequential schedule items overlap
+ * the seconds times are adjusted
+ *
+ * \param schedule The Castus schedule
+ **/
 void trim_overlapping(Castus4publicSchedule &schedule) {
     auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
