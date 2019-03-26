@@ -1,4 +1,7 @@
 
+#ifndef Castus4publicCSchedule_h
+#define Castus4publicCSchedule_h
+
 #include <castus4-public/schedule_object.h>
 #include <castus4-public/schedule.h>
 #include <castus4-public/parsetime.h>
@@ -32,7 +35,7 @@ Castus4publicSchedule* schedule_alloc();
 /**
 * Loads a schedule from a string
 *
-* \param self Pointer to the schedule 
+* \param self Pointer to the schedule
 * \param data The string
 * \return true if successful
 **/
@@ -116,7 +119,7 @@ Castus4publicSchedule::ScheduleItem *schedule_item(Castus4publicSchedule* self, 
 * \param self The pointer to the schedule
 * \return Number of blocks.
 *
-* This function is used with schedule_block() 
+* This function is used with schedule_block()
 * to determine the maximium value of pos.
 **/
 int schedule_block_count(Castus4publicSchedule* self);
@@ -196,6 +199,6 @@ const char *item_entry_key(Castus4publicSchedule::ScheduleItem* self, int pos);
 **/
 const char *item_entry_value(Castus4publicSchedule::ScheduleItem* self, int pos);
 
-
+#endif
 
 

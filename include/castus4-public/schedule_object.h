@@ -1,6 +1,6 @@
 
-#ifndef Castus4publicSchedule_h
-#define Castus4publicSchedule_h
+#ifndef Castus4publicScheduleObject_h
+#define Castus4publicScheduleObject_h
 
 #include <stdio.h>
 

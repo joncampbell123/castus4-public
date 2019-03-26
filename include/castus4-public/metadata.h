@@ -1,4 +1,7 @@
 
+#ifndef Castus4publicMetadata_h
+#define Castus4publicMetadata_h
+
 #include <string>
 #include <list>
 #include <map>
@@ -22,3 +25,4 @@ bool castus4public_is_metadata_dir(const std::string &path);
 std::string castus4public_file_to_metadata_dir(const char *path);
 std::string castus4public_file_to_metadata_dir(const std::string &path);
 
+#endif
