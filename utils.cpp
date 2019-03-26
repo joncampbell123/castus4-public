@@ -5,6 +5,7 @@
 #include <castus4-public/metadata.h>
 #include <castus4-public/schedule_object.h>
 #include <iostream>
+#include <functional>
 
 #include "utils.h"
 
@@ -42,6 +43,26 @@ bool write(Castus4publicSchedule &schedule) {
     return true;
 }
 
+void loop(Castus4publicSchedule &schedule,
+        std::function<void (Castus4publicSchedule::ScheduleItem &current_item,
+                    Castus4publicSchedule::ScheduleItem &next_item)> logic) {
+    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
+        auto current_item = schedule_item;
+        schedule_item++;
+        if (schedule_item == schedule.schedule_items.end()) break;
+
+        auto next_item = schedule_item;
+
+        if (is_valid(*current_item) && is_valid(*next_item)) logic(*current_item, *next_item);
+    }
+}
+
+void loop(Castus4publicSchedule &schedule,
+        std::function<void (Castus4publicSchedule::ScheduleItem &current_item)> logic) {
+    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();schedule_item++)
+        if (is_valid(*schedule_item)) logic(*schedule_item);
+}
+
 void tag_touching_item(Castus4publicSchedule &schedule)
 {
     const Castus4publicSchedule::ideal_time_t min_blank_interval = 1000000; /* 1000000us = 1000ms = 1 sec */
@@ -70,17 +91,7 @@ void tag_touching_item(Castus4publicSchedule &schedule)
 
     };
 
-    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto current_item = schedule_item;
-
-        schedule_item++;
-        if (schedule_item == schedule.schedule_items.end()) break;
-
-        auto next_item = schedule_item;
-        // Verify both items are valid
-        if ( is_valid(*current_item) && is_valid(*next_item) )
-            logic( *current_item, *next_item);
-    }
+    loop(schedule, logic);
 }
 
 void update_duration(Castus4publicSchedule &schedule) {
@@ -130,8 +141,7 @@ void update_duration(Castus4publicSchedule &schedule) {
         schedule_item.setEndTime(c_end);
     };
 
-    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();schedule_item++)
-        if (is_valid(*schedule_item)) logic(*schedule_item);
+    loop(schedule, logic);
 }
 
 void ripple_connected_item(Castus4publicSchedule &schedule) {
@@ -165,15 +175,7 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
     current_item.deleteValue("x-next-joined");
     };
 
-    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto current_item = schedule_item;
-
-        schedule_item++;
-        if (schedule_item == schedule.schedule_items.end()) break;
-
-        auto next_item = schedule_item;
-        if (is_valid(*current_item) && is_valid(*next_item)) logic(*current_item, *next_item);
-    }
+    loop(schedule, logic);
 }
 
 void ripple_down_overlapping(Castus4publicSchedule &schedule) {
@@ -199,18 +201,7 @@ void ripple_down_overlapping(Castus4publicSchedule &schedule) {
         }
     };
 
-    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto current_item = schedule_item;
-
-        schedule_item++;
-        if (schedule_item == schedule.schedule_items.end()) break;
-
-        auto next_item = schedule_item;
-
-        if (is_valid(*current_item) && is_valid(*next_item)) {
-            logic(*current_item, *next_item);
-        }
-    }
+    loop(schedule, logic);
 }
 
 void trim_overlapping(Castus4publicSchedule &schedule) {
@@ -222,16 +213,6 @@ void trim_overlapping(Castus4publicSchedule &schedule) {
         auto n_end = next_item.getEndTime();
         if (c_end > n_start && c_end < (n_start + 1000000ull)) current_item.setEndTime(n_start);
     };
-
-    for (auto schedule_item=schedule.schedule_items.begin();schedule_item!=schedule.schedule_items.end();) {
-        auto current_item = schedule_item;
-
-        schedule_item++;
-        if (schedule_item == schedule.schedule_items.end()) break;
-
-        auto next_item = schedule_item;
-
-        if (is_valid(*current_item) && is_valid(*next_item)) logic(*current_item, *next_item);
-    }
+    loop(schedule, logic);
 }
 
