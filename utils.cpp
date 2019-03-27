@@ -32,10 +32,10 @@ void tag_touching_item(Castus4publicSchedule &schedule)
         next_item.deleteValue("x-next-joined");
 
         if ((c_end + min_blank_interval) >= n_start) {
-            char tmp[64];
+            char tmp[128];
 
             if (c_end < n_start) {
-                sprintf(tmp,"%llu",n_start - c_end);
+                snprintf(tmp, 127, "%llu",n_start - c_end);
                 current_item.setValue("x-next-joined-gap-us",tmp);
             }
 
@@ -91,7 +91,7 @@ void update_duration(Castus4publicSchedule &schedule) {
 
         {
             char tmp[128];
-            sprintf(tmp,"%.3f",duration);
+            snprintf(tmp, 127, "%.3f",duration);
             schedule_item.setValue("item duration",tmp);
         }
 
