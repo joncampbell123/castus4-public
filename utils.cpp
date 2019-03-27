@@ -62,17 +62,26 @@ void update_duration(Castus4publicSchedule &schedule) {
     using SchedItem = Castus4publicSchedule::ScheduleItem;
     using Metadata = castus4public_metadata_list;
 
-    auto logic = [](SchedItem &schedule_item) {
+    auto load_meta = [](SchedItem& schedule_item) {
         const char *item = schedule_item.getValue("item");
 
-        if (item == NULL) return;
+        if (item == NULL) return std::unique_ptr<Metadata>{ nullptr };
 
         std::string metadir = castus4public_file_to_metadata_dir(item);
-        if (metadir.empty()) return;
+        if (metadir.empty()) return std::unique_ptr<Metadata>{ nullptr };
 
-        Metadata meta;
+        std::unique_ptr<Metadata> meta{ new Metadata };
         std::string metapath = metadir + "/metadata";
-        if (!meta.read_metadata(metapath.c_str())) return;
+        if (!meta->read_metadata(metapath.c_str())) return std::unique_ptr<Metadata>{ nullptr };
+
+        return meta;
+    };
+    auto update_timing = [=](SchedItem& schedule_item) {
+        auto meta_ptr = load_meta(schedule_item);
+        if (!meta_ptr) {
+            return;
+        }
+        auto& meta = *meta_ptr;
 
         const char *duration_str = meta.getValue("duration");
         if (duration_str == NULL) return;
@@ -108,7 +117,7 @@ void update_duration(Castus4publicSchedule &schedule) {
         schedule_item.setEndTime(c_end);
     };
 
-    loop(schedule, logic);
+    loop(schedule, update_timing);
 }
 
 /**
