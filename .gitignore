@@ -57,6 +57,9 @@ autochop1
 castus4-public.pc
 castus4-public_demo_gentime
 castus4-public_demo_parsetime
+filter-example-check-duration
+filter-example-check-duration-and-ripple
+filter-example-check-duration-and-ripple-bidi
 lintschedule
 lintschedule2
 lintschedule3
