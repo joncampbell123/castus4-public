@@ -97,6 +97,27 @@ void update_duration(Castus4publicSchedule &schedule) {
         }
     };
 
+    auto adjust_duration = [] (double& duration, double in_point, double out_point) {
+        if (!std::isnan(out_point) && out_point >= 0 && out_point < duration) {
+            // Adjust the duration to remove the unplayed epilogue
+            // TODO(Alex): Use `duration -= duration - out_point` because
+            //             this more accurately represents the
+            //             operation, and allows reordering
+            //             the in/out handling.
+            duration = out_point;
+        }
+
+        if (!std::isnan(in_point) && in_point >= 0) {
+            // Adjust the duration to remove the skipped prologue
+            duration -= in_point;
+        }
+
+        // Clamp duration to a minimum of 0.01 seconds
+        if (duration < 0.01) {
+            duration = 0.01;
+        }
+    };
+
     auto update_schedule = [](SchedItem &schedule_item, double duration, double in_point, double out_point) {
         char tmp[128];
 
@@ -148,28 +169,8 @@ void update_duration(Castus4publicSchedule &schedule) {
         // Read the out point (the "logical" end of the item
         // even when more content remains)
         double out_point = read_meta_double(*meta, "out");
-
-        char tmp[128];
-
-        if (!std::isnan(out_point) && out_point >= 0 && out_point < duration) {
-            // Adjust the duration to remove the unplayed epilogue
-            // TODO(Alex): Use `duration -= duration - out_point` because
-            //             this more accurately represents the
-            //             operation, and allows reordering
-            //             the in/out handling.
-            duration = out_point;
-        }
-
-        if (!std::isnan(in_point) && in_point >= 0) {
-            // Adjust the duration to remove the skipped prologue
-            duration -= in_point;
-        }
-
-        // Clamp duration to a minimum of 0.01 seconds
-        if (duration < 0.01) {
-            duration = 0.01;
-        }
-
+        // Adjust the duration to account for the in and out points
+        adjust_duration(duration, in_point, out_point);
         // Alter the relevant fields of the schedule
         update_schedule(schedule_item, duration, in_point, out_point);
     };
