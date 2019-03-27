@@ -76,6 +76,17 @@ void update_duration(Castus4publicSchedule &schedule) {
 
         return meta;
     };
+
+    auto read_duration = [](Metadata& meta) {
+        const char *duration_str = meta.getValue("duration");
+        if (!duration_str) return (double)NAN;
+
+        double duration = strtod(duration_str,NULL);
+        if (duration < 0.1) return (double)NAN;
+
+        return duration;
+    };
+
     auto update_timing = [=](SchedItem& schedule_item) {
         auto meta_ptr = load_meta(schedule_item);
         if (!meta_ptr) {
@@ -83,11 +94,11 @@ void update_duration(Castus4publicSchedule &schedule) {
         }
         auto& meta = *meta_ptr;
 
-        const char *duration_str = meta.getValue("duration");
-        if (duration_str == NULL) return;
-
-        double duration = strtod(duration_str,NULL);
-        if (duration < 0.1) return;
+        double duration  = read_duration(*meta_ptr);
+        // Return early if the duration is unset
+        if (std::isnan(duration)) {
+            return;
+        }
 
         const char *m = meta.getValue("out");
         if (m != NULL && *m != 0) {
