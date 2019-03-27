@@ -20,7 +20,7 @@ void tag_touching_item(Castus4publicSchedule &schedule)
 {
     const Castus4publicSchedule::ideal_time_t min_blank_interval = 1000000; /* 1000000us = 1000ms = 1 sec */
 
-    auto logic = [min_blank_interval](Castus4publicSchedule::ScheduleItem &current_item,
+    auto tag_one_adjacency = [min_blank_interval](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
         current_item.deleteValue("x-next-joined");
         // auto c_start = current_item->getStartTime();
@@ -44,7 +44,7 @@ void tag_touching_item(Castus4publicSchedule &schedule)
 
     };
 
-    loop(schedule, logic);
+    loop(schedule, tag_one_adjacency);
 }
 
 /**
@@ -110,7 +110,7 @@ void update_duration(Castus4publicSchedule &schedule) {
  * \param schedule The Castus schedule
  **/
 void ripple_connected_item(Castus4publicSchedule &schedule) {
-    auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
+    auto repair_gap = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
         auto c_start = current_item.getStartTime();
         auto c_end = current_item.getEndTime();
@@ -140,7 +140,7 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
     current_item.deleteValue("x-next-joined");
     };
 
-    loop(schedule, logic);
+    loop(schedule, repair_gap);
 }
 
 /**
@@ -151,7 +151,7 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
  **/
 void ripple_down_overlapping(Castus4publicSchedule &schedule) {
 
-    auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
+    auto ripple_one = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
 
         // auto c_start = current_item->getStartTime();
@@ -172,7 +172,7 @@ void ripple_down_overlapping(Castus4publicSchedule &schedule) {
         }
     };
 
-    loop(schedule, logic);
+    loop(schedule, ripple_one);
 }
 
 /**
@@ -182,7 +182,7 @@ void ripple_down_overlapping(Castus4publicSchedule &schedule) {
  * \param schedule The Castus schedule
  **/
 void trim_overlapping(Castus4publicSchedule &schedule) {
-    auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
+    auto trim_one = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
         auto c_end = current_item.getEndTime();
 
@@ -190,6 +190,6 @@ void trim_overlapping(Castus4publicSchedule &schedule) {
         auto n_end = next_item.getEndTime();
         if (c_end > n_start && c_end < (n_start + 1000000ull)) current_item.setEndTime(n_start);
     };
-    loop(schedule, logic);
+    loop(schedule, trim_one);
 }
 
