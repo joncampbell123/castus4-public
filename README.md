@@ -2,6 +2,17 @@ This repository contains a library and example programs for the
 publicly-available API of CASTUS 4. It is intended to be useful
 for third parties that wish to interoperate with a CASTUS system.
 
+It compiles to 3 progams.
+- filter-example-check-duration
+- filter-example-check-duration-and-rippl
+- filter-example-check-duration-and-ripple-bidi
+
+The logic for all of these is in `utils.cpp`.  They depend on
+schedule helpers in `utils_schedule.cpp`.
+
+To create a new filter use the main from `filter-example-check-duration-and-ripple-bidi.cpp` and the logic
+from `utils.cpp`.
+
 # Building
 
 This repository uses a standard autotools buildsystem. If you
@@ -13,8 +24,8 @@ make
 make install
 ```
 
-or 
-    
+or
+
     ./configure
     make
     sudo make install PREFIX=/usr/local
