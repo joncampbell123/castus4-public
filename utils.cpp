@@ -97,6 +97,40 @@ void update_duration(Castus4publicSchedule &schedule) {
         }
     };
 
+    auto update_schedule = [](SchedItem &schedule_item, double duration, double in_point, double out_point) {
+        char tmp[128];
+
+        if (std::isnan(out_point)) {
+            // If the item had no out point, clear the cached
+            // value from the schedule
+            schedule_item.deleteValue("out");
+        } else {
+            // Propagate the out point into the schedule
+            snprintf(tmp, 127, "%.3f", out_point);
+            schedule_item.setValue("out", tmp);
+        }
+
+        if (std::isnan(in_point)) {
+            // If the item had no in point, clear the cached
+            // value from the schedule
+            schedule_item.deleteValue("in");
+        } else {
+            // Propagate the in point into the schedule
+            snprintf(tmp, 127, "%.3f", out_point);
+            schedule_item.setValue("in", tmp);
+        }
+
+        if(!std::isnan(duration)) {
+            char tmp[128];
+            snprintf(tmp, 127, "%.3f",duration);
+            schedule_item.setValue("item duration",tmp);
+        }
+
+        auto c_start = schedule_item.getStartTime();
+        auto c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000 /* μs */);
+        schedule_item.setEndTime(c_end);
+    };
+
     auto update_timing = [=](SchedItem& schedule_item) {
         auto meta = load_meta(schedule_item);
         if (!meta) {
@@ -124,25 +158,11 @@ void update_duration(Castus4publicSchedule &schedule) {
             //             operation, and allows reordering
             //             the in/out handling.
             duration = out_point;
-            snprintf(tmp, 127, "%.3f", out_point);
-            // Propagate the out point into the schedule
-            schedule_item.setValue("out", tmp);
-        } else {
-            // If the item had no out point, clear the cached
-            // value from the schedule
-            schedule_item.deleteValue("out");
         }
 
         if (!std::isnan(in_point) && in_point >= 0) {
             // Adjust the duration to remove the skipped prologue
             duration -= in_point;
-            // Propagate the in point into the schedule
-            snprintf(tmp, 127, "%.3f", out_point);
-            schedule_item.setValue("in", tmp);
-        } else {
-            // If the item had no in point, clear the cached
-            // value from the schedule
-            schedule_item.deleteValue("in");
         }
 
         // Clamp duration to a minimum of 0.01 seconds
@@ -150,14 +170,8 @@ void update_duration(Castus4publicSchedule &schedule) {
             duration = 0.01;
         }
 
-        if(!std::isnan(duration)) {
-            snprintf(tmp, 127, "%.3f",duration);
-            schedule_item.setValue("item duration",tmp);
-        }
-
-        auto c_start = schedule_item.getStartTime();
-        auto c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000 /* μs */);
-        schedule_item.setEndTime(c_end);
+        // Alter the relevant fields of the schedule
+        update_schedule(schedule_item, duration, in_point, out_point);
     };
 
     loop(schedule, update_timing);
