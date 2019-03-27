@@ -87,38 +87,70 @@ void update_duration(Castus4publicSchedule &schedule) {
         return duration;
     };
 
+    auto read_meta_double = [](Metadata& meta, const char* name) {
+        auto entry = meta.getValue(name);
+        if (entry && *entry != '\0') {
+            double value = strtod(entry,NULL);
+            return value;
+        } else {
+            return (double)NAN;
+        }
+    };
+
     auto update_timing = [=](SchedItem& schedule_item) {
-        auto meta_ptr = load_meta(schedule_item);
-        if (!meta_ptr) {
+        auto meta = load_meta(schedule_item);
+        if (!meta) {
             return;
         }
-        auto& meta = *meta_ptr;
 
-        double duration  = read_duration(*meta_ptr);
+        double duration  = read_duration(*meta);
         // Return early if the duration is unset
         if (std::isnan(duration)) {
             return;
         }
 
-        const char *m = meta.getValue("out");
-        if (m != NULL && *m != 0) {
-            double v = strtod(m,NULL);
-            if (v >= 0 && duration > v) duration = v;
-            schedule_item.setValue("out",m);
-        }
-        else schedule_item.deleteValue("out");
+        // Read the in point (where to begin playing the item)
+        double in_point  = read_meta_double(*meta, "in");
+        // Read the out point (the "logical" end of the item
+        // even when more content remains)
+        double out_point = read_meta_double(*meta, "out");
 
-        m = meta.getValue("in");
-        if (m != NULL && *m != 0) {
-            double v = strtod(m,NULL);
-            if (v >= 0) duration -= v;
-            if (duration < 0.01) duration = 0.01;
-            schedule_item.setValue("in",m);
-        }
-        else schedule_item.deleteValue("in");
+        char tmp[128];
 
-        {
-            char tmp[128];
+        if (!std::isnan(out_point) && out_point >= 0 && out_point < duration) {
+            // Adjust the duration to remove the unplayed epilogue
+            // TODO(Alex): Use `duration -= duration - out_point` because
+            //             this more accurately represents the
+            //             operation, and allows reordering
+            //             the in/out handling.
+            duration = out_point;
+            snprintf(tmp, 127, "%.3f", out_point);
+            // Propagate the out point into the schedule
+            schedule_item.setValue("out", tmp);
+        } else {
+            // If the item had no out point, clear the cached
+            // value from the schedule
+            schedule_item.deleteValue("out");
+        }
+
+        if (!std::isnan(in_point) && in_point >= 0) {
+            // Adjust the duration to remove the skipped prologue
+            duration -= in_point;
+            // Propagate the in point into the schedule
+            snprintf(tmp, 127, "%.3f", out_point);
+            schedule_item.setValue("in", tmp);
+        } else {
+            // If the item had no in point, clear the cached
+            // value from the schedule
+            schedule_item.deleteValue("in");
+        }
+
+        // Clamp duration to a minimum of 0.01 seconds
+        if (duration < 0.01) {
+            duration = 0.01;
+        }
+
+        if(!std::isnan(duration)) {
             snprintf(tmp, 127, "%.3f",duration);
             schedule_item.setValue("item duration",tmp);
         }
