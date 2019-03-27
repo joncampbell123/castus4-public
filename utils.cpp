@@ -1,6 +1,9 @@
-#include <castus4-public/schedule_object.h>
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <cmath>
+#include <memory>
+
+#include <castus4-public/schedule_object.h>
 
 #include "utils.h"
 #include "utils_schedule.h"
