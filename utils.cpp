@@ -59,7 +59,10 @@ void tag_touching_item(Castus4publicSchedule &schedule)
  * \param schedule The Castus schedule
  **/
 void update_duration(Castus4publicSchedule &schedule) {
-    auto logic = [](Castus4publicSchedule::ScheduleItem &schedule_item) {
+    using SchedItem = Castus4publicSchedule::ScheduleItem;
+    using Metadata = castus4public_metadata_list;
+
+    auto logic = [](SchedItem &schedule_item) {
         const char *item = schedule_item.getValue("item");
 
         if (item == NULL) return;
@@ -67,7 +70,7 @@ void update_duration(Castus4publicSchedule &schedule) {
         std::string metadir = castus4public_file_to_metadata_dir(item);
         if (metadir.empty()) return;
 
-        castus4public_metadata_list meta;
+        Metadata meta;
         std::string metapath = metadir + "/metadata";
         if (!meta.read_metadata(metapath.c_str())) return;
 
