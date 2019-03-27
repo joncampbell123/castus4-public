@@ -22,23 +22,28 @@ void tag_touching_item(Castus4publicSchedule &schedule)
 
     auto tag_one_adjacency = [min_blank_interval](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
+        // Clear previous join information
         current_item.deleteValue("x-next-joined");
-        // auto c_start = current_item->getStartTime();
-        auto c_end = current_item.getEndTime();
-
-        auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
-
         next_item.deleteValue("x-next-joined");
+        // TODO(Alex): Should we also clear x-next-joined-gap-us?
 
+        auto c_end   = current_item.getEndTime();
+        auto n_start = next_item.getStartTime();
+        auto n_end   = next_item.getEndTime();
+
+
+        // If the current item ends within min_blank_interval of when the next starts
         if ((c_end + min_blank_interval) >= n_start) {
             char tmp[128];
 
+            // But does not already overlap
             if (c_end < n_start) {
                 snprintf(tmp, 127, "%llu",n_start - c_end);
+                // Mark it with the length of the gap so it can be preserved
                 current_item.setValue("x-next-joined-gap-us",tmp);
             }
 
+            // Whether or not they overlap, mark them as joined
             current_item.setValue("x-next-joined","1");
         }
 
@@ -96,7 +101,7 @@ void update_duration(Castus4publicSchedule &schedule) {
         }
 
         auto c_start = schedule_item.getStartTime();
-        auto c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000);
+        auto c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000 /* μs */);
         schedule_item.setEndTime(c_end);
     };
 
@@ -113,22 +118,23 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
     auto repair_gap = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
         auto c_start = current_item.getStartTime();
-        auto c_end = current_item.getEndTime();
-
+        auto c_end   = current_item.getEndTime();
         auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
+        auto n_end   = next_item.getEndTime();
 
         const char *joined = current_item.getValue("x-next-joined");
+        // If these two items were joined together
         if (joined != NULL && atoi(joined) > 0) {
-            /* no matter whether the item duration grew or shrank, the items remain joined together */
             unsigned long long gap = 0;
             unsigned long long old_duration = n_end - n_start;
+
+            // Read back what the gap between them used to be
             const char *gap_str = current_item.getValue("x-next-joined-gap-us");
-
-            if (gap_str != NULL)
+            if (gap_str != NULL) {
                 gap = strtoull(gap_str,NULL,0);
+            }
 
-            // move the next item
+            // Move the next item in such a way that the old gap is restored
             n_start = c_end + gap;
             n_end = n_start + old_duration;
 
@@ -136,8 +142,9 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
             next_item.setEndTime(n_end);
         }
 
-    current_item.deleteValue("x-next-joined-gap-us");
-    current_item.deleteValue("x-next-joined");
+        // Clear out the cached values
+        current_item.deleteValue("x-next-joined-gap-us");
+        current_item.deleteValue("x-next-joined");
     };
 
     loop(schedule, repair_gap);
@@ -154,11 +161,9 @@ void ripple_down_overlapping(Castus4publicSchedule &schedule) {
     auto ripple_one = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
 
-        // auto c_start = current_item->getStartTime();
-        auto c_end = current_item.getEndTime();
-
+        auto c_end   = current_item.getEndTime();
         auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
+        auto n_end   = next_item.getEndTime();
 
         if (c_end > n_start) {
             unsigned long long old_duration = n_end - n_start;
@@ -188,7 +193,11 @@ void trim_overlapping(Castus4publicSchedule &schedule) {
 
         auto n_start = next_item.getStartTime();
         auto n_end = next_item.getEndTime();
-        if (c_end > n_start && c_end < (n_start + 1000000ull)) current_item.setEndTime(n_start);
+        // If the current item overlaps the next item by less than
+        // 1,000,000 (what units? μs?), shorten it.
+        if (c_end > n_start && c_end < (n_start + 1000000ull)) {
+            current_item.setEndTime(n_start);
+        }
     };
     loop(schedule, trim_one);
 }

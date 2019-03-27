@@ -15,6 +15,7 @@ int main() {
     load(schedule);
 
     // step 1: add a tag for each item that is touching
+    // TODO(Alex): The data this populates is not used here; remove?
     tag_touching_item(schedule);
 
     // step 2: check each item, read the duration from metadata, and update the duration from meta
