@@ -44,6 +44,7 @@ public:
 		Item,
 		ScheduleBlockItem,
 		Defaults,
+		Triggers,
 		Unknown
 	};
 	typedef bool (*writeout_cb_t)(Castus4publicSchedule *_this,const char *line,void *opaque);
@@ -146,6 +147,7 @@ public:
 	std::map<std::string,std::string>		defaults_values;
 	std::string					defaults_type;
 	std::map<std::string,std::string>		global_values;
+	std::multimap<std::string, std::string>		schedule_triggers;
 	int						schedule_type;
 	int						interval_length;
 };

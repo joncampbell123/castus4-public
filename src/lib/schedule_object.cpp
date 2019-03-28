@@ -168,6 +168,9 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 					entry_mode = ScheduleBlockItem;
 					schedule_blocks.push_back(ScheduleBlock(schedule_type));
 				}
+				else if (entry == "triggers") {
+					entry_mode = Triggers;
+				}
 				else {
 					entry_mode = Unknown;
 				}
@@ -206,6 +209,18 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 					case Item:
 						assert(!schedule_items.empty());
 						schedule_items.back().takeNameValuePair(name,value);
+						break;
+					case Triggers:
+						// Find where the index info of the trigger is
+						const char* open_square  = strchr(line, '[');
+						const char* close_square = strchr(line, ']');
+						// Parse out the trigger name
+						std::string trigger(line, open_square-line);
+						// Parse out the trigger index
+						// TODO(Alex): Enforce that the trigger indices are sequential and start at zero
+						//             for a given trigger
+						int index = stoi(std::string(open_square+1, open_square+1-close_square));
+						schedule_triggers.insert(std::pair<std::string, std::string>(trigger, value));
 						break;
 				}
 			}
@@ -320,6 +335,28 @@ bool Castus4publicSchedule::write_out(writeout_cb_t f,void *opaque) {
 			if (!write_out_name_value_pair(j->first,j->second,f,opaque,/*tab=*/true,/*spcequ*/false)) return false;
 		}
 
+		if (!f(this,"}\n",opaque)) return false;
+	}
+
+	if (!schedule_triggers.empty()) {
+		if (!f(this, "triggers {\n", opaque)) return false;
+		std::multimap<std::string, std::string>::iterator prev = schedule_triggers.end();
+		int counter = 0;
+		for (auto trigger = schedule_triggers.begin(); trigger != schedule_triggers.end(); ++trigger) {
+			if (prev != schedule_triggers.end() && prev->first != trigger->first) {
+				counter = 0;
+			}
+			auto written = write_out_name_value_pair(
+				trigger->first + "[" + std::to_string(counter) + "]",
+				trigger->second,
+				f,
+				opaque,
+				/*tab=*/true,
+				/*spcequ*/false
+			);
+			if (!written) return false;
+			prev = trigger;
+		}
 		if (!f(this,"}\n",opaque)) return false;
 	}
 
