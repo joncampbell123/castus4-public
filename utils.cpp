@@ -237,32 +237,38 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
 }
 
 /**
+ * This function moves a schedule item such that it no longer
+ * overlaps with the preceding item, an action called "rippling".
+ *
+ * \param current_item The item to use as reference
+ * \param next_item The item to modify
+ */
+void ripple_one(const Castus4publicSchedule::ScheduleItem &current_item,
+                Castus4publicSchedule::ScheduleItem &next_item) {
+
+    auto c_end   = current_item.getEndTime();
+    auto n_start = next_item.getStartTime();
+    auto n_end   = next_item.getEndTime();
+
+    if (c_end > n_start) {
+        unsigned long long old_duration = n_end - n_start;
+
+        // move the next item down
+        n_start = c_end;
+        n_end = n_start + old_duration;
+
+        next_item.setStartTime(n_start);
+        next_item.setEndTime(n_end);
+    }
+};
+
+/**
  * This function takes a schedule and if any two sequential schedule items overlap
  * it adjusts the times of the second time
  *
  * \param schedule The Castus schedule
  **/
 void ripple_down_overlapping(Castus4publicSchedule &schedule) {
-
-    auto ripple_one = [](Castus4publicSchedule::ScheduleItem &current_item,
-                    Castus4publicSchedule::ScheduleItem &next_item) {
-
-        auto c_end   = current_item.getEndTime();
-        auto n_start = next_item.getStartTime();
-        auto n_end   = next_item.getEndTime();
-
-        if (c_end > n_start) {
-            unsigned long long old_duration = n_end - n_start;
-
-            // move the next item down
-            n_start = c_end;
-            n_end = n_start + old_duration;
-
-            next_item.setStartTime(n_start);
-            next_item.setEndTime(n_end);
-        }
-    };
-
     loop(schedule, ripple_one);
 }
 
