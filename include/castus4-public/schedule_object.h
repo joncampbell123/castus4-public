@@ -14,13 +14,13 @@ class Castus4publicSchedule;
 
 class Castus4publicSchedule {
 public:
-	static const unsigned int			ideal_microsec_per_sec = 1000000;
-	static const unsigned int			ideal_sec_per_min = 60;
-	static const unsigned int			ideal_min_per_hour = 60;
-	static const unsigned int			ideal_hour_per_day = 24;
-	static const unsigned int			ideal_day_per_week = 7;
-	static const unsigned int			ideal_day_per_month = 31;
-	static const unsigned int			ideal_month_per_year = 12;
+	static const unsigned int			ideal_microsec_per_sec;
+	static const unsigned int			ideal_sec_per_min;
+	static const unsigned int			ideal_min_per_hour;
+	static const unsigned int			ideal_hour_per_day;
+	static const unsigned int			ideal_day_per_week;
+	static const unsigned int			ideal_day_per_month;
+	static const unsigned int			ideal_month_per_year;
 
     // The schedule type as a string
     std::string type();
@@ -28,7 +28,7 @@ public:
 	// "ideal time t" is duration from start of schedule in microseconds
 	typedef signed long long			ideal_time_t;
 
-	static const ideal_time_t			ideal_time_t_invalid = (ideal_time_t)(-1LL);
+	static const ideal_time_t			ideal_time_t_invalid;
 public:
 	enum entry_parse_mode {
 		Global=0,

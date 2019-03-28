@@ -20,6 +20,15 @@
 #include <list>
 #include <map>
 
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_time_t_invalid = (ideal_time_t)(-1LL);
+const unsigned int			Castus4publicSchedule::ideal_microsec_per_sec = 1000000;
+const unsigned int			Castus4publicSchedule::ideal_sec_per_min = 60;
+const unsigned int			Castus4publicSchedule::ideal_min_per_hour = 60;
+const unsigned int			Castus4publicSchedule::ideal_hour_per_day = 24;
+const unsigned int			Castus4publicSchedule::ideal_day_per_week = 7;
+const unsigned int			Castus4publicSchedule::ideal_day_per_month = 31;
+const unsigned int			Castus4publicSchedule::ideal_month_per_year = 12;
+
 void Castus4publicSchedule::common_std_map_name_value_pair_entry(std::map<std::string,std::string> &entry,const std::string &name,const std::string &value) {
 	std::map<std::string,std::string>::iterator entry_i = entry.find(name);
 	if (entry_i == entry.end())
