@@ -53,12 +53,12 @@ void tag_touching_item(Castus4publicSchedule &schedule)
 }
 
 /**
- * This function takes a schedule and reads the duration out of the metadata and
- * sets `item duration` to it.
+ * This function takes a single schedule item and updates its
+ * duration based on the relevant file's on-disk metadata
  *
- * \param schedule The Castus schedule
- **/
-void update_duration(Castus4publicSchedule &schedule) {
+ * \param schedule_item The item to modify
+ */
+void update_timing(Castus4publicSchedule::ScheduleItem& schedule_item) {
     using SchedItem = Castus4publicSchedule::ScheduleItem;
     using Metadata = castus4public_metadata_list;
 
@@ -152,30 +152,46 @@ void update_duration(Castus4publicSchedule &schedule) {
         schedule_item.setEndTime(c_end);
     };
 
-    auto update_timing = [=](SchedItem& schedule_item) {
-        auto meta = load_meta(schedule_item);
-        if (!meta) {
-            return;
+
+    auto meta = load_meta(schedule_item);
+    if (!meta) {
+        return;
+    }
+
+    double duration  = read_duration(*meta);
+    // Return early if the duration is unset
+    if (std::isnan(duration)) {
+        return;
+    }
+
+    // Read the in point (where to begin playing the item)
+    double in_point  = read_meta_double(*meta, "in");
+    // Read the out point (the "logical" end of the item
+    // even when more content remains)
+    double out_point = read_meta_double(*meta, "out");
+    // Adjust the duration to account for the in and out points
+    adjust_duration(duration, in_point, out_point);
+    // Alter the relevant fields of the schedule
+    update_schedule(schedule_item, duration, in_point, out_point);
+}
+
+/**
+ * This function takes a schedule and reads the duration out of the metadata and
+ * sets `item duration` to it.
+ *
+ * \param schedule The Castus schedule
+ **/
+void update_duration(Castus4publicSchedule &schedule) {
+    for (auto& item : schedule.schedule_items) {
+        if (is_valid(item)) {
+            update_timing(item);
+        }
+    }
+}
+
         }
 
-        double duration  = read_duration(*meta);
-        // Return early if the duration is unset
-        if (std::isnan(duration)) {
-            return;
-        }
 
-        // Read the in point (where to begin playing the item)
-        double in_point  = read_meta_double(*meta, "in");
-        // Read the out point (the "logical" end of the item
-        // even when more content remains)
-        double out_point = read_meta_double(*meta, "out");
-        // Adjust the duration to account for the in and out points
-        adjust_duration(duration, in_point, out_point);
-        // Alter the relevant fields of the schedule
-        update_schedule(schedule_item, duration, in_point, out_point);
-    };
-
-    loop(schedule, update_timing);
 }
 
 /**
