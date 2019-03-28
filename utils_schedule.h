@@ -11,5 +11,3 @@ bool write(Castus4publicSchedule &schedule);
 void loop(Castus4publicSchedule &schedule,
         std::function<void (Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item)> logic);
-void loop(Castus4publicSchedule &schedule,
-        std::function<void (Castus4publicSchedule::ScheduleItem &current_item)> logic);
