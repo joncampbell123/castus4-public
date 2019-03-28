@@ -11,5 +11,7 @@ void ripple_down_overlapping(Castus4publicSchedule &schedule);
 void update_timing(Castus4publicSchedule::ScheduleItem& schedule_item);
 void ripple_one(const Castus4publicSchedule::ScheduleItem &current_item,
                 Castus4publicSchedule::ScheduleItem &next_item);
+void repair_gap(Castus4publicSchedule::ScheduleItem &current_item,
+                Castus4publicSchedule::ScheduleItem &next_item);
 
 #endif

@@ -189,9 +189,47 @@ void update_duration(Castus4publicSchedule &schedule) {
     }
 }
 
+/**
+ * This function alters the timing of an item to restore the gap
+ * that had existed prior to duration changes and rippling.
+ *
+ * \param current_item The item used for reference (only tags are modified)
+ * \param next_item The item to modify
+ */
+// TODO(Alex): Find a better way of stashing information, so
+//             that the first argument can be made `const`
+void repair_gap(Castus4publicSchedule::ScheduleItem &current_item,
+                Castus4publicSchedule::ScheduleItem &next_item) {
+    auto c_start = current_item.getStartTime();
+    auto c_end   = current_item.getEndTime();
+    auto n_start = next_item.getStartTime();
+    auto n_end   = next_item.getEndTime();
+
+    const char *joined = current_item.getValue("x-next-joined");
+    // If these two items were joined together
+    if (joined != NULL && atoi(joined) > 0) {
+        unsigned long long gap = 0;
+        unsigned long long old_duration = n_end - n_start;
+
+        // Read back what the gap between them used to be
+        const char *gap_str = current_item.getValue("x-next-joined-gap-us");
+        if (gap_str != NULL) {
+            gap = strtoull(gap_str,NULL,0);
         }
 
+        // Move the next item in such a way that the old gap is restored
+        n_start = c_end + gap;
+        n_end = n_start + old_duration;
 
+        next_item.setStartTime(n_start);
+        next_item.setEndTime(n_end);
+    }
+
+    // Clear out the cached values
+    // TODO(Alex): Find a better way of doing this, so the argument used
+    //             as a point of reference is not mutated
+    current_item.deleteValue("x-next-joined-gap-us");
+    current_item.deleteValue("x-next-joined");
 }
 
 /**
@@ -201,38 +239,6 @@ void update_duration(Castus4publicSchedule &schedule) {
  * \param schedule The Castus schedule
  **/
 void ripple_connected_item(Castus4publicSchedule &schedule) {
-    auto repair_gap = [](Castus4publicSchedule::ScheduleItem &current_item,
-                    Castus4publicSchedule::ScheduleItem &next_item) {
-        auto c_start = current_item.getStartTime();
-        auto c_end   = current_item.getEndTime();
-        auto n_start = next_item.getStartTime();
-        auto n_end   = next_item.getEndTime();
-
-        const char *joined = current_item.getValue("x-next-joined");
-        // If these two items were joined together
-        if (joined != NULL && atoi(joined) > 0) {
-            unsigned long long gap = 0;
-            unsigned long long old_duration = n_end - n_start;
-
-            // Read back what the gap between them used to be
-            const char *gap_str = current_item.getValue("x-next-joined-gap-us");
-            if (gap_str != NULL) {
-                gap = strtoull(gap_str,NULL,0);
-            }
-
-            // Move the next item in such a way that the old gap is restored
-            n_start = c_end + gap;
-            n_end = n_start + old_duration;
-
-            next_item.setStartTime(n_start);
-            next_item.setEndTime(n_end);
-        }
-
-        // Clear out the cached values
-        current_item.deleteValue("x-next-joined-gap-us");
-        current_item.deleteValue("x-next-joined");
-    };
-
     loop(schedule, repair_gap);
 }
 
