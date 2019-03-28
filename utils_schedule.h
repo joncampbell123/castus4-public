@@ -8,6 +8,8 @@
 void load(Castus4publicSchedule &schedule);
 bool is_valid(const Castus4publicSchedule::ScheduleItem &item);
 bool write(Castus4publicSchedule &schedule);
+bool in_block(const Castus4publicSchedule::ScheduleItem& item,
+        const Castus4publicSchedule::ScheduleBlock& block);
 void loop(Castus4publicSchedule &schedule,
         std::function<void (Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item)> logic);

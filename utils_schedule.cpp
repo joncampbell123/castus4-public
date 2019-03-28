@@ -54,6 +54,18 @@ bool write(Castus4publicSchedule &schedule) {
 }
 
 /**
+ * Checks if an item is inside a block
+ *
+ * \param item The schedule item
+ * \param block The block to check if `item` is within
+ * \return true if the item is inside the block, false otherwise
+ */
+bool in_block(const Castus4publicSchedule::ScheduleItem& item,
+        const Castus4publicSchedule::ScheduleBlock& block) {
+    return(block.getStartTime() <= item.getStartTime() && item.getStartTime() < block.getEndTime());
+}
+
+/**
  * Loops over all the items in a schedule, two at a time, if they are both valid itpasses them
  * to a callback.
  *
