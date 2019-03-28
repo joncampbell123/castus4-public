@@ -1,8 +1,6 @@
 #!/bin/sh
 
 if [ -d .git ]; then
-    git clean -dfX
-
     cat >AUTHORS <<ENDAUTHORS
 # Generated from git logs by autogen.sh
 # Format: name <email>
