@@ -20,6 +20,14 @@
 #include <list>
 #include <map>
 
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_microsecond = 1;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_second      = 1000000 * ideal_microsecond;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_minute      = 60      * ideal_second;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_hour        = 60      * ideal_minute;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_day         = 24      * ideal_hour;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_week        = 7       * ideal_day;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_month       = 31      * ideal_day;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_year        = 12      * ideal_month;
 
 const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_time_t_invalid   = (ideal_time_t)(-1LL);
 const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_microsec_per_sec = 1000000;

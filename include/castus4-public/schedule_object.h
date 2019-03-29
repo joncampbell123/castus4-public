@@ -18,6 +18,15 @@ public:
 	// "ideal time t" is duration from start of schedule in microseconds
 	typedef int64_t			ideal_time_t;
 
+	static const ideal_time_t ideal_microsecond;
+	static const ideal_time_t ideal_second;
+	static const ideal_time_t ideal_minute;
+	static const ideal_time_t ideal_hour;
+	static const ideal_time_t ideal_day;
+	static const ideal_time_t ideal_week;
+	static const ideal_time_t ideal_month;
+	static const ideal_time_t ideal_year;
+
 	static const ideal_time_t ideal_time_t_invalid;
 	static const ideal_time_t ideal_microsec_per_sec;
 	static const ideal_time_t ideal_sec_per_min;
