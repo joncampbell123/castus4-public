@@ -171,6 +171,9 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 				else if (entry == "triggers") {
 					entry_mode = Triggers;
 				}
+				else if (entry == "intervals") {
+					entry_mode = Intervals;
+				}
 				else {
 					entry_mode = Unknown;
 				}
@@ -211,6 +214,7 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 						schedule_items.back().takeNameValuePair(name,value);
 						break;
 					case Triggers:
+					case Intervals:
 						// Find where the index info of the trigger is
 						const char* open_square  = strchr(line, '[');
 						const char* close_square = strchr(line, ']');
@@ -220,7 +224,11 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 						// TODO(Alex): Enforce that the trigger indices are sequential and start at zero
 						//             for a given trigger
 						int index = stoi(std::string(open_square+1, open_square+1-close_square));
-						schedule_triggers.insert(std::pair<std::string, std::string>(trigger, value));
+						if (entry_mode == Triggers) {
+							schedule_triggers.insert(std::pair<std::string, std::string>(trigger, value));
+						} else if (entry_mode == Intervals) {
+							schedule_intervals.insert(std::pair<std::string, std::string>(trigger, value));
+						}
 						break;
 				}
 			}
@@ -356,6 +364,28 @@ bool Castus4publicSchedule::write_out(writeout_cb_t f,void *opaque) {
 			);
 			if (!written) return false;
 			prev = trigger;
+		}
+		if (!f(this,"}\n",opaque)) return false;
+	}
+
+	if (!schedule_intervals.empty()) {
+		if (!f(this, "intervals {\n", opaque)) return false;
+		std::multimap<std::string, std::string>::iterator prev = schedule_triggers.end();
+		int counter = 0;
+		for (auto interval = schedule_intervals.begin(); interval != schedule_intervals.end(); ++interval) {
+			if (prev != schedule_intervals.end() && prev->first != interval->first) {
+				counter = 0;
+			}
+			auto written = write_out_name_value_pair(
+				interval->first + "[" + std::to_string(counter) + "]",
+				interval->second,
+				f,
+				opaque,
+				/*tab=*/true,
+				/*spcequ*/false
+			);
+			if (!written) return false;
+			prev = interval;
 		}
 		if (!f(this,"}\n",opaque)) return false;
 	}
