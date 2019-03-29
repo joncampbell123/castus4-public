@@ -2,6 +2,7 @@
 #ifndef Castus4publicScheduleObject_h
 #define Castus4publicScheduleObject_h
 
+#include <cinttypes>
 #include <cstdio>
 
 #include <iostream>
@@ -14,21 +15,20 @@ class Castus4publicSchedule;
 
 class Castus4publicSchedule {
 public:
-	static const unsigned int			ideal_microsec_per_sec;
-	static const unsigned int			ideal_sec_per_min;
-	static const unsigned int			ideal_min_per_hour;
-	static const unsigned int			ideal_hour_per_day;
-	static const unsigned int			ideal_day_per_week;
-	static const unsigned int			ideal_day_per_month;
-	static const unsigned int			ideal_month_per_year;
+	// "ideal time t" is duration from start of schedule in microseconds
+	typedef int64_t			ideal_time_t;
+
+	static const ideal_time_t ideal_time_t_invalid;
+	static const ideal_time_t ideal_microsec_per_sec;
+	static const ideal_time_t ideal_sec_per_min;
+	static const ideal_time_t ideal_min_per_hour;
+	static const ideal_time_t ideal_hour_per_day;
+	static const ideal_time_t ideal_day_per_week;
+	static const ideal_time_t ideal_day_per_month;
+	static const ideal_time_t ideal_month_per_year;
 
     // The schedule type as a string
     std::string type();
-
-	// "ideal time t" is duration from start of schedule in microseconds
-	typedef signed long long			ideal_time_t;
-
-	static const ideal_time_t			ideal_time_t_invalid;
 public:
 	enum entry_parse_mode {
 		Global=0,
