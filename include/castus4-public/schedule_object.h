@@ -2,7 +2,7 @@
 #ifndef Castus4publicScheduleObject_h
 #define Castus4publicScheduleObject_h
 
-#include <stdio.h>
+#include <cstdio>
 
 #include <iostream>
 #include <string>
