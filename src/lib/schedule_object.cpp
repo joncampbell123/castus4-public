@@ -40,9 +40,9 @@ const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_month_per
 
 void Castus4publicSchedule::common_std_map_name_value_pair_entry(std::map<std::string,std::string> &entry,const std::string &name,const std::string &value) {
 	std::map<std::string,std::string>::iterator entry_i = entry.find(name);
-	if (entry_i == entry.end())
+	if (entry_i == entry.end()) {
 		entry[name] = value;
-	else {
+	} else {
 		entry_i->second += "\n";
 		entry_i->second += value;
 	}
