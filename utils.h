@@ -3,7 +3,8 @@
 #define UTILS
 #include <castus4-public/schedule.h>
 
-void tag_touching_item(Castus4publicSchedule &schedule);
+void tag_touching_item(Castus4publicSchedule &schedule,
+    Castus4publicSchedule::ideal_time_t min_blank_interval);
 void update_duration(Castus4publicSchedule &schedule);
 void ripple_connected_item(Castus4publicSchedule &schedule);
 void trim_overlapping(Castus4publicSchedule &schedule);

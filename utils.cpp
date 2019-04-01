@@ -16,9 +16,8 @@ using namespace std;
  *
  * \param schedule The Castus schedule
  **/
-void tag_touching_item(Castus4publicSchedule &schedule)
+void tag_touching_item(Castus4publicSchedule &schedule, Castus4publicSchedule::ideal_time_t min_blank_interval)
 {
-    const Castus4publicSchedule::ideal_time_t min_blank_interval = 1000000; /* 1000000us = 1000ms = 1 sec */
 
     auto tag_one_adjacency = [min_blank_interval](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
