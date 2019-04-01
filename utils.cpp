@@ -1,6 +1,7 @@
 #include <functional>
 #include <iostream>
 #include <cmath>
+#include <cinttypes>
 #include <memory>
 
 #include <castus4-public/schedule_object.h>
@@ -36,7 +37,7 @@ void tag_touching_item(Castus4publicSchedule &schedule, Castus4publicSchedule::i
 
             // But does not already overlap
             if (c_end < n_start) {
-                snprintf(tmp, 127, "%llu",n_start - c_end);
+                snprintf(tmp, 127, PRId64,n_start - c_end);
                 // Mark it with the length of the gap so it can be preserved
                 current_item.setValue("x-next-joined-gap-us",tmp);
             }
