@@ -28,7 +28,6 @@ void tag_touching_item(Castus4publicSchedule &schedule, Castus4publicSchedule::i
 
         auto c_end   = current_item.getEndTime();
         auto n_start = next_item.getStartTime();
-        auto n_end   = next_item.getEndTime();
 
 
         // If the current item ends within min_blank_interval of when the next starts
@@ -199,7 +198,6 @@ void update_duration(Castus4publicSchedule &schedule) {
 //             that the first argument can be made `const`
 void repair_gap(Castus4publicSchedule::ScheduleItem &current_item,
                 Castus4publicSchedule::ScheduleItem &next_item) {
-    auto c_start = current_item.getStartTime();
     auto c_end   = current_item.getEndTime();
     auto n_start = next_item.getStartTime();
     auto n_end   = next_item.getEndTime();
@@ -289,7 +287,6 @@ void trim_overlapping(Castus4publicSchedule &schedule) {
         auto c_end = current_item.getEndTime();
 
         auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
         // If the current item overlaps the next item by less than
         // 1,000,000 (what units? μs?), shorten it.
         if (c_end > n_start && c_end < (n_start + (Castus4publicSchedule::ideal_time_t)1000000)) {

@@ -217,13 +217,13 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 					case Intervals:
 						// Find where the index info of the trigger is
 						const char* open_square  = strchr(line, '[');
-						const char* close_square = strchr(line, ']');
+						// const char* close_square = strchr(line, ']');
 						// Parse out the trigger name
 						std::string trigger(line, open_square-line);
 						// Parse out the trigger index
 						// TODO(Alex): Enforce that the trigger indices are sequential and start at zero
 						//             for a given trigger
-						int index = stoi(std::string(open_square+1, open_square+1-close_square));
+						//int index = stoi(std::string(open_square+1, open_square+1-close_square));
 						if (entry_mode == Triggers) {
 							schedule_triggers.insert(std::pair<std::string, std::string>(trigger, value));
 						} else if (entry_mode == Intervals) {

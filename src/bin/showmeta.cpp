@@ -15,9 +15,7 @@
 using namespace std;
 
 int main(int argc,char **argv) {
-	char line[1024];
 	struct stat st;
-	FILE *fp;
 
 	if (argc < 2) {
 		fprintf(stderr,"showmeta <media file>\n");
