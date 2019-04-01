@@ -14,7 +14,7 @@ int main() {
 
 
     // step 1: add a tag for each item that is touching
-    tag_touching_item(schedule);
+    tag_touching_item(schedule, min_blank_interval);
 
     // step 2: check each item, read the duration from metadata, and update the duration from meta
     update_duration(schedule);

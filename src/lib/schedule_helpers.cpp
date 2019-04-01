@@ -14,7 +14,7 @@ namespace Castus4publicScheduleHelpers {
     * Loads a schedule from a string
     **/
     bool load_from_string(class  Castus4publicSchedule &schedule, std::string data) {
-	    schedule.begin_load();
+        schedule.begin_load();
 
         // Split the string into an array of lines
         std::vector<std::string> lines;
@@ -27,7 +27,7 @@ namespace Castus4publicScheduleHelpers {
             // Only accept lines with text in case the line split
             // gives us blank lines
             if (line.size() != 0)
-		        schedule.load_take_line( line.c_str() );
+                schedule.load_take_line( line.c_str() );
         }
         schedule.end_load();
         return true;
@@ -38,26 +38,27 @@ namespace Castus4publicScheduleHelpers {
     * \param file The full path of the file to load
     *
     * Loads a schedule file
-    **/ 
+    **/
     bool load(class Castus4publicSchedule &schedule, std::string file) {
-	    FILE *fp;
-    	char line[1024];
+        FILE *fp;
+        char line[1024];
 
-	    fp = fopen(file.c_str(),"r");
-        if (fp==NULL)
+        fp = fopen(file.c_str(),"r");
+        if (fp==NULL) {
             return false;
+        }
 
-	    schedule.begin_load();
-	    memset(line,0,sizeof(line));
-	    while (!feof(fp) && !ferror(fp)) {
-		    if (fgets(line,sizeof(line)-1,fp) == NULL) break;
-		    castus4public_chomp(line);
-		    schedule.load_take_line(line);
-	    }
+        schedule.begin_load();
+        memset(line,0,sizeof(line));
+        while (!feof(fp) && !ferror(fp)) {
+            if (fgets(line,sizeof(line)-1,fp) == NULL) break;
+            castus4public_chomp(line);
+            schedule.load_take_line(line);
+        }
         // TODO return false if !ferror(fp)
 
-	    schedule.end_load();
-	    fclose(fp);
+        schedule.end_load();
+        fclose(fp);
         return true;
     }
 }

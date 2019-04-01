@@ -68,7 +68,7 @@ string castus4_schedule_print_time(int stm_type,const struct tm *stm,unsigned lo
 	}
 
 	w += snprintf(w,(size_t)(wf-w)," %s ",
-		(stm->tm_hour >= 12) ? "pm" : "am");
+		((stm->tm_hour % 24) >= 12) ? "pm" : "am");
 
 	assert(w <= wf);
 	while ((w-1) >= tmp && w[-1] == ' ') w--;

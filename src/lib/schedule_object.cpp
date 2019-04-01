@@ -20,11 +20,29 @@
 #include <list>
 #include <map>
 
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_microsecond = 1;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_second      = 1000000 * ideal_microsecond;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_minute      = 60      * ideal_second;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_hour        = 60      * ideal_minute;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_day         = 24      * ideal_hour;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_week        = 7       * ideal_day;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_month       = 31      * ideal_day;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_year        = 12      * ideal_month;
+
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_time_t_invalid   = (ideal_time_t)(-1LL);
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_microsec_per_sec = 1000000;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_sec_per_min      = 60;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_min_per_hour     = 60;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_hour_per_day     = 24;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_day_per_week     = 7;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_day_per_month    = 31;
+const Castus4publicSchedule::ideal_time_t Castus4publicSchedule::ideal_month_per_year   = 12;
+
 void Castus4publicSchedule::common_std_map_name_value_pair_entry(std::map<std::string,std::string> &entry,const std::string &name,const std::string &value) {
 	std::map<std::string,std::string>::iterator entry_i = entry.find(name);
-	if (entry_i == entry.end())
+	if (entry_i == entry.end()) {
 		entry[name] = value;
-	else {
+	} else {
 		entry_i->second += "\n";
 		entry_i->second += value;
 	}
@@ -150,6 +168,12 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 					entry_mode = ScheduleBlockItem;
 					schedule_blocks.push_back(ScheduleBlock(schedule_type));
 				}
+				else if (entry == "triggers") {
+					entry_mode = Triggers;
+				}
+				else if (entry == "intervals") {
+					entry_mode = Intervals;
+				}
 				else {
 					entry_mode = Unknown;
 				}
@@ -175,6 +199,8 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 				 *      in the same way the Server Sent Events do, concat together with
 				 *      newlines. */
 				switch (entry_mode) {
+					case Unknown:
+						break;
 					case Global:
 						common_std_map_name_value_pair_entry(/*&*/global_values,name,value);
 						break;
@@ -188,6 +214,23 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 					case Item:
 						assert(!schedule_items.empty());
 						schedule_items.back().takeNameValuePair(name,value);
+						break;
+					case Triggers:
+					case Intervals:
+						// Find where the index info of the trigger is
+						const char* open_square  = strchr(line, '[');
+						// const char* close_square = strchr(line, ']');
+						// Parse out the trigger name
+						std::string trigger(line, open_square-line);
+						// Parse out the trigger index
+						// TODO(Alex): Enforce that the trigger indices are sequential and start at zero
+						//             for a given trigger
+						//int index = stoi(std::string(open_square+1, open_square+1-close_square));
+						if (entry_mode == Triggers) {
+							schedule_triggers.insert(std::pair<std::string, std::string>(trigger, value));
+						} else if (entry_mode == Intervals) {
+							schedule_intervals.insert(std::pair<std::string, std::string>(trigger, value));
+						}
 						break;
 				}
 			}
@@ -302,6 +345,50 @@ bool Castus4publicSchedule::write_out(writeout_cb_t f,void *opaque) {
 			if (!write_out_name_value_pair(j->first,j->second,f,opaque,/*tab=*/true,/*spcequ*/false)) return false;
 		}
 
+		if (!f(this,"}\n",opaque)) return false;
+	}
+
+	if (!schedule_triggers.empty()) {
+		if (!f(this, "triggers {\n", opaque)) return false;
+		std::multimap<std::string, std::string>::iterator prev = schedule_triggers.end();
+		int counter = 0;
+		for (auto trigger = schedule_triggers.begin(); trigger != schedule_triggers.end(); ++trigger) {
+			if (prev != schedule_triggers.end() && prev->first != trigger->first) {
+				counter = 0;
+			}
+			auto written = write_out_name_value_pair(
+				trigger->first + "[" + std::to_string(counter) + "]",
+				trigger->second,
+				f,
+				opaque,
+				/*tab=*/true,
+				/*spcequ*/false
+			);
+			if (!written) return false;
+			prev = trigger;
+		}
+		if (!f(this,"}\n",opaque)) return false;
+	}
+
+	if (!schedule_intervals.empty()) {
+		if (!f(this, "intervals {\n", opaque)) return false;
+		std::multimap<std::string, std::string>::iterator prev = schedule_triggers.end();
+		int counter = 0;
+		for (auto interval = schedule_intervals.begin(); interval != schedule_intervals.end(); ++interval) {
+			if (prev != schedule_intervals.end() && prev->first != interval->first) {
+				counter = 0;
+			}
+			auto written = write_out_name_value_pair(
+				interval->first + "[" + std::to_string(counter) + "]",
+				interval->second,
+				f,
+				opaque,
+				/*tab=*/true,
+				/*spcequ*/false
+			);
+			if (!written) return false;
+			prev = interval;
+		}
 		if (!f(this,"}\n",opaque)) return false;
 	}
 

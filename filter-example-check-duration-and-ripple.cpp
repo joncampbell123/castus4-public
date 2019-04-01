@@ -14,13 +14,10 @@ int main() {
 	Castus4publicSchedule schedule;
     load(schedule);
 
-    // step 1: add a tag for each item that is touching
-    tag_touching_item(schedule);
-
-    // step 2: check each item, read the duration from metadata, and update the duration from meta
+    // step 1: check each item, read the duration from metadata, and update the duration from meta
     update_duration(schedule);
 
-    // step 4: ripple down overlapping items
+    // step 2: ripple down overlapping items
     ripple_down_overlapping(schedule);
 
     write(schedule);

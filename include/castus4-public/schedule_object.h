@@ -2,7 +2,8 @@
 #ifndef Castus4publicScheduleObject_h
 #define Castus4publicScheduleObject_h
 
-#include <stdio.h>
+#include <cinttypes>
+#include <cstdio>
 
 #include <iostream>
 #include <string>
@@ -14,27 +15,37 @@ class Castus4publicSchedule;
 
 class Castus4publicSchedule {
 public:
-	static const unsigned int			ideal_microsec_per_sec = 1000000;
-	static const unsigned int			ideal_sec_per_min = 60;
-	static const unsigned int			ideal_min_per_hour = 60;
-	static const unsigned int			ideal_hour_per_day = 24;
-	static const unsigned int			ideal_day_per_week = 7;
-	static const unsigned int			ideal_day_per_month = 31;
-	static const unsigned int			ideal_month_per_year = 12;
+	// "ideal time t" is duration from start of schedule in microseconds
+	typedef int64_t			ideal_time_t;
+
+	static const ideal_time_t ideal_microsecond;
+	static const ideal_time_t ideal_second;
+	static const ideal_time_t ideal_minute;
+	static const ideal_time_t ideal_hour;
+	static const ideal_time_t ideal_day;
+	static const ideal_time_t ideal_week;
+	static const ideal_time_t ideal_month;
+	static const ideal_time_t ideal_year;
+
+	static const ideal_time_t ideal_time_t_invalid;
+	static const ideal_time_t ideal_microsec_per_sec;
+	static const ideal_time_t ideal_sec_per_min;
+	static const ideal_time_t ideal_min_per_hour;
+	static const ideal_time_t ideal_hour_per_day;
+	static const ideal_time_t ideal_day_per_week;
+	static const ideal_time_t ideal_day_per_month;
+	static const ideal_time_t ideal_month_per_year;
 
     // The schedule type as a string
     std::string type();
-
-	// "ideal time t" is duration from start of schedule in microseconds
-	typedef signed long long			ideal_time_t;
-
-	static const ideal_time_t			ideal_time_t_invalid = (ideal_time_t)(-1LL);
 public:
 	enum entry_parse_mode {
 		Global=0,
 		Item,
 		ScheduleBlockItem,
 		Defaults,
+		Triggers,
+		Intervals,
 		Unknown
 	};
 	typedef bool (*writeout_cb_t)(Castus4publicSchedule *_this,const char *line,void *opaque);
@@ -137,6 +148,8 @@ public:
 	std::map<std::string,std::string>		defaults_values;
 	std::string					defaults_type;
 	std::map<std::string,std::string>		global_values;
+	std::multimap<std::string, std::string>		schedule_triggers;
+	std::multimap<std::string, std::string>     schedule_intervals;
 	int						schedule_type;
 	int						interval_length;
 };

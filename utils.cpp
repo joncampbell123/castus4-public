@@ -1,6 +1,10 @@
-#include <castus4-public/schedule_object.h>
-#include <iostream>
 #include <functional>
+#include <iostream>
+#include <cmath>
+#include <cinttypes>
+#include <memory>
+
+#include <castus4-public/schedule_object.h>
 
 #include "utils.h"
 #include "utils_schedule.h"
@@ -13,35 +17,161 @@ using namespace std;
  *
  * \param schedule The Castus schedule
  **/
-void tag_touching_item(Castus4publicSchedule &schedule)
+void tag_touching_item(Castus4publicSchedule &schedule, Castus4publicSchedule::ideal_time_t min_blank_interval)
 {
-    const Castus4publicSchedule::ideal_time_t min_blank_interval = 1000000; /* 1000000us = 1000ms = 1 sec */
 
-    auto logic = [min_blank_interval](Castus4publicSchedule::ScheduleItem &current_item,
+    auto tag_one_adjacency = [min_blank_interval](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
+        // Clear previous join information
         current_item.deleteValue("x-next-joined");
-        // auto c_start = current_item->getStartTime();
-        auto c_end = current_item.getEndTime();
-
-        auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
-
         next_item.deleteValue("x-next-joined");
+        // TODO(Alex): Should we also clear x-next-joined-gap-us?
 
+        auto c_end   = current_item.getEndTime();
+        auto n_start = next_item.getStartTime();
+
+
+        // If the current item ends within min_blank_interval of when the next starts
         if ((c_end + min_blank_interval) >= n_start) {
-            char tmp[64];
+            char tmp[128];
 
+            // But does not already overlap
             if (c_end < n_start) {
-                sprintf(tmp,"%llu",n_start - c_end);
+                snprintf(tmp, 127, PRId64,n_start - c_end);
+                // Mark it with the length of the gap so it can be preserved
                 current_item.setValue("x-next-joined-gap-us",tmp);
             }
 
+            // Whether or not they overlap, mark them as joined
             current_item.setValue("x-next-joined","1");
         }
 
     };
 
-    loop(schedule, logic);
+    loop(schedule, tag_one_adjacency);
+}
+
+/**
+ * This function takes a single schedule item and updates its
+ * duration based on the relevant file's on-disk metadata
+ *
+ * \param schedule_item The item to modify
+ */
+void update_timing(Castus4publicSchedule::ScheduleItem& schedule_item) {
+    using SchedItem = Castus4publicSchedule::ScheduleItem;
+    using Metadata = castus4public_metadata_list;
+
+    auto load_meta = [](SchedItem& schedule_item) {
+        const char *item = schedule_item.getValue("item");
+
+        if (item == NULL) return std::unique_ptr<Metadata>{ nullptr };
+
+        std::string metadir = castus4public_file_to_metadata_dir(item);
+        if (metadir.empty()) return std::unique_ptr<Metadata>{ nullptr };
+
+        std::unique_ptr<Metadata> meta{ new Metadata };
+        std::string metapath = metadir + "/metadata";
+        if (!meta->read_metadata(metapath.c_str())) return std::unique_ptr<Metadata>{ nullptr };
+
+        return meta;
+    };
+
+    auto read_duration = [](Metadata& meta) {
+        const char *duration_str = meta.getValue("duration");
+        if (!duration_str) return (double)NAN;
+
+        double duration = strtod(duration_str,NULL);
+        if (duration < 0.1) return (double)NAN;
+
+        return duration;
+    };
+
+    auto read_meta_double = [](Metadata& meta, const char* name) {
+        auto entry = meta.getValue(name);
+        if (entry && *entry != '\0') {
+            double value = strtod(entry,NULL);
+            return value;
+        } else {
+            return (double)NAN;
+        }
+    };
+
+    auto adjust_duration = [] (double& duration, double in_point, double out_point) {
+        if (!std::isnan(out_point) && out_point >= 0 && out_point < duration) {
+            // Adjust the duration to remove the unplayed epilogue
+            // TODO(Alex): Use `duration -= duration - out_point` because
+            //             this more accurately represents the
+            //             operation, and allows reordering
+            //             the in/out handling.
+            duration = out_point;
+        }
+
+        if (!std::isnan(in_point) && in_point >= 0) {
+            // Adjust the duration to remove the skipped prologue
+            duration -= in_point;
+        }
+
+        // Clamp duration to a minimum of 0.01 seconds
+        if (duration < 0.01) {
+            duration = 0.01;
+        }
+    };
+
+    auto update_schedule = [](SchedItem &schedule_item, double duration, double in_point, double out_point) {
+        char tmp[128];
+
+        if (std::isnan(out_point)) {
+            // If the item had no out point, clear the cached
+            // value from the schedule
+            schedule_item.deleteValue("out");
+        } else {
+            // Propagate the out point into the schedule
+            snprintf(tmp, 127, "%.3f", out_point);
+            schedule_item.setValue("out", tmp);
+        }
+
+        if (std::isnan(in_point)) {
+            // If the item had no in point, clear the cached
+            // value from the schedule
+            schedule_item.deleteValue("in");
+        } else {
+            // Propagate the in point into the schedule
+            snprintf(tmp, 127, "%.3f", out_point);
+            schedule_item.setValue("in", tmp);
+        }
+
+        if(!std::isnan(duration)) {
+            char tmp[128];
+            snprintf(tmp, 127, "%.3f",duration);
+            schedule_item.setValue("item duration",tmp);
+        }
+
+        auto c_start = schedule_item.getStartTime();
+        auto c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000 /* μs */);
+        schedule_item.setEndTime(c_end);
+    };
+
+
+    auto meta = load_meta(schedule_item);
+    if (!meta) {
+        return;
+    }
+
+    double duration  = read_duration(*meta);
+    // Return early if the duration is unset
+    if (std::isnan(duration)) {
+        return;
+    }
+
+    // Read the in point (where to begin playing the item)
+    double in_point  = read_meta_double(*meta, "in");
+    // Read the out point (the "logical" end of the item
+    // even when more content remains)
+    double out_point = read_meta_double(*meta, "out");
+    // Adjust the duration to account for the in and out points
+    adjust_duration(duration, in_point, out_point);
+    // Alter the relevant fields of the schedule
+    update_schedule(schedule_item, duration, in_point, out_point);
 }
 
 /**
@@ -51,53 +181,53 @@ void tag_touching_item(Castus4publicSchedule &schedule)
  * \param schedule The Castus schedule
  **/
 void update_duration(Castus4publicSchedule &schedule) {
-    auto logic = [](Castus4publicSchedule::ScheduleItem &schedule_item) {
-        const char *item = schedule_item.getValue("item");
-
-        if (item == NULL) return;
-
-        std::string metadir = castus4public_file_to_metadata_dir(item);
-        if (metadir.empty()) return;
-
-        castus4public_metadata_list meta;
-        std::string metapath = metadir + "/metadata";
-        if (!meta.read_metadata(metapath.c_str())) return;
-
-        const char *duration_str = meta.getValue("duration");
-        if (duration_str == NULL) return;
-
-        double duration = strtod(duration_str,NULL);
-        if (duration < 0.1) return;
-
-        const char *m = meta.getValue("out");
-        if (m != NULL && *m != 0) {
-            double v = strtod(m,NULL);
-            if (v >= 0 && duration > v) duration = v;
-            schedule_item.setValue("out",m);
+    for (auto& item : schedule.schedule_items) {
+        if (is_valid(item)) {
+            update_timing(item);
         }
-        else schedule_item.deleteValue("out");
+    }
+}
 
-        m = meta.getValue("in");
-        if (m != NULL && *m != 0) {
-            double v = strtod(m,NULL);
-            if (v >= 0) duration -= v;
-            if (duration < 0.01) duration = 0.01;
-            schedule_item.setValue("in",m);
-        }
-        else schedule_item.deleteValue("in");
+/**
+ * This function alters the timing of an item to restore the gap
+ * that had existed prior to duration changes and rippling.
+ *
+ * \param current_item The item used for reference (only tags are modified)
+ * \param next_item The item to modify
+ */
+// TODO(Alex): Find a better way of stashing information, so
+//             that the first argument can be made `const`
+void repair_gap(Castus4publicSchedule::ScheduleItem &current_item,
+                Castus4publicSchedule::ScheduleItem &next_item) {
+    auto c_end   = current_item.getEndTime();
+    auto n_start = next_item.getStartTime();
+    auto n_end   = next_item.getEndTime();
 
-        {
-            char tmp[128];
-            sprintf(tmp,"%.3f",duration);
-            schedule_item.setValue("item duration",tmp);
+    const char *joined = current_item.getValue("x-next-joined");
+    // If these two items were joined together
+    if (joined != NULL && atoi(joined) > 0) {
+        unsigned long long gap = 0;
+        unsigned long long old_duration = n_end - n_start;
+
+        // Read back what the gap between them used to be
+        const char *gap_str = current_item.getValue("x-next-joined-gap-us");
+        if (gap_str != NULL) {
+            gap = strtoull(gap_str,NULL,0);
         }
 
-        auto c_start = schedule_item.getStartTime();
-        auto c_end = c_start + (Castus4publicSchedule::ideal_time_t)(duration * 1000000);
-        schedule_item.setEndTime(c_end);
-    };
+        // Move the next item in such a way that the old gap is restored
+        n_start = c_end + gap;
+        n_end = n_start + old_duration;
 
-    loop(schedule, logic);
+        next_item.setStartTime(n_start);
+        next_item.setEndTime(n_end);
+    }
+
+    // Clear out the cached values
+    // TODO(Alex): Find a better way of doing this, so the argument used
+    //             as a point of reference is not mutated
+    current_item.deleteValue("x-next-joined-gap-us");
+    current_item.deleteValue("x-next-joined");
 }
 
 /**
@@ -107,38 +237,34 @@ void update_duration(Castus4publicSchedule &schedule) {
  * \param schedule The Castus schedule
  **/
 void ripple_connected_item(Castus4publicSchedule &schedule) {
-    auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
-                    Castus4publicSchedule::ScheduleItem &next_item) {
-        auto c_start = current_item.getStartTime();
-        auto c_end = current_item.getEndTime();
-
-        auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
-
-        const char *joined = current_item.getValue("x-next-joined");
-        if (joined != NULL && atoi(joined) > 0) {
-            /* no matter whether the item duration grew or shrank, the items remain joined together */
-            unsigned long long gap = 0;
-            unsigned long long old_duration = n_end - n_start;
-            const char *gap_str = current_item.getValue("x-next-joined-gap-us");
-
-            if (gap_str != NULL)
-                gap = strtoull(gap_str,NULL,0);
-
-            // move the next item
-            n_start = c_end + gap;
-            n_end = n_start + old_duration;
-
-            next_item.setStartTime(n_start);
-            next_item.setEndTime(n_end);
-        }
-
-    current_item.deleteValue("x-next-joined-gap-us");
-    current_item.deleteValue("x-next-joined");
-    };
-
-    loop(schedule, logic);
+    loop(schedule, repair_gap);
 }
+
+/**
+ * This function moves a schedule item such that it no longer
+ * overlaps with the preceding item, an action called "rippling".
+ *
+ * \param current_item The item to use as reference
+ * \param next_item The item to modify
+ */
+void ripple_one(const Castus4publicSchedule::ScheduleItem &current_item,
+                Castus4publicSchedule::ScheduleItem &next_item) {
+
+    auto c_end   = current_item.getEndTime();
+    auto n_start = next_item.getStartTime();
+    auto n_end   = next_item.getEndTime();
+
+    if (c_end > n_start) {
+        unsigned long long old_duration = n_end - n_start;
+
+        // move the next item down
+        n_start = c_end;
+        n_end = n_start + old_duration;
+
+        next_item.setStartTime(n_start);
+        next_item.setEndTime(n_end);
+    }
+};
 
 /**
  * This function takes a schedule and if any two sequential schedule items overlap
@@ -147,29 +273,7 @@ void ripple_connected_item(Castus4publicSchedule &schedule) {
  * \param schedule The Castus schedule
  **/
 void ripple_down_overlapping(Castus4publicSchedule &schedule) {
-
-    auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
-                    Castus4publicSchedule::ScheduleItem &next_item) {
-
-        // auto c_start = current_item->getStartTime();
-        auto c_end = current_item.getEndTime();
-
-        auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
-
-        if (c_end > n_start) {
-            unsigned long long old_duration = n_end - n_start;
-
-            // move the next item down
-            n_start = c_end;
-            n_end = n_start + old_duration;
-
-            next_item.setStartTime(n_start);
-            next_item.setEndTime(n_end);
-        }
-    };
-
-    loop(schedule, logic);
+    loop(schedule, ripple_one);
 }
 
 /**
@@ -179,14 +283,17 @@ void ripple_down_overlapping(Castus4publicSchedule &schedule) {
  * \param schedule The Castus schedule
  **/
 void trim_overlapping(Castus4publicSchedule &schedule) {
-    auto logic = [](Castus4publicSchedule::ScheduleItem &current_item,
+    auto trim_one = [](Castus4publicSchedule::ScheduleItem &current_item,
                     Castus4publicSchedule::ScheduleItem &next_item) {
         auto c_end = current_item.getEndTime();
 
         auto n_start = next_item.getStartTime();
-        auto n_end = next_item.getEndTime();
-        if (c_end > n_start && c_end < (n_start + 1000000ull)) current_item.setEndTime(n_start);
+        // If the current item overlaps the next item by less than
+        // 1,000,000 (what units? μs?), shorten it.
+        if (c_end > n_start && c_end < (n_start + (Castus4publicSchedule::ideal_time_t)1000000)) {
+            current_item.setEndTime(n_start);
+        }
     };
-    loop(schedule, logic);
+    loop(schedule, trim_one);
 }
 
