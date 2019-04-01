@@ -15,7 +15,7 @@ extern "C" {
         char* buf = (char*)malloc(string_length);
         if ( !buf ) {
             // Handle allocation failure
-        nullptr;
+            return nullptr;
         }
 
         snprintf(buf, string_length, "%li", start);
