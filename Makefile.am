@@ -1,6 +1,7 @@
 
 ACLOCAL_AMFLAGS = -I m4
-AM_CPPFLAGS = -I$(top_srcdir)/include -std=c++11
+AM_CPPFLAGS = -I$(top_srcdir)/include
+AM_CXXFLAGS = -std=c++11
 
 instfilterdir = $(datarootdir)/castus4/filterscripts
 pkgconfiglibdir = $(libdir)/pkgconfig
