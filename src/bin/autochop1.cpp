@@ -138,7 +138,7 @@ int main(int argc,char **argv) {
 			{
 				const char *v = sciter->getValue("advertisement");
 				if (v != NULL && atoi(v) > 0) {
-					unsigned long long sub = end - start;
+					Castus4publicSchedule::ideal_time_t sub = end - start;
 					if (sub > bump) sub = bump;
 					bump -= sub;
 
@@ -154,7 +154,7 @@ int main(int argc,char **argv) {
 			}
 
 			if (bump != 0 && start > last_end) {
-				unsigned long long sub = start - last_end;
+				Castus4publicSchedule::ideal_time_t sub = start - last_end;
 				if (sub > bump) sub = bump;
 				bump -= sub;
 			}

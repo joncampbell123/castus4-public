@@ -293,7 +293,7 @@ void trim_overlapping(Castus4publicSchedule &schedule) {
         auto n_end = next_item.getEndTime();
         // If the current item overlaps the next item by less than
         // 1,000,000 (what units? μs?), shorten it.
-        if (c_end > n_start && c_end < (n_start + 1000000ull)) {
+        if (c_end > n_start && c_end < (n_start + (Castus4publicSchedule::ideal_time_t)1000000)) {
             current_item.setEndTime(n_start);
         }
     };
