@@ -199,6 +199,8 @@ void Castus4publicSchedule::load_take_line(const char *line) {
 				 *      in the same way the Server Sent Events do, concat together with
 				 *      newlines. */
 				switch (entry_mode) {
+					case Unknown:
+						break;
 					case Global:
 						common_std_map_name_value_pair_entry(/*&*/global_values,name,value);
 						break;
